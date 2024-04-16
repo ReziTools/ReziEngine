@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(rezistenta VERSION 0.1)
+project(rezistenta VERSION 0.2)
 
 find_package(raylib REQUIRED)
 

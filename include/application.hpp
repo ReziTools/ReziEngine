@@ -1,25 +1,41 @@
 #pragma once
+#include "button.hpp"
+#include "graph.hpp"
+#include "point.hpp"
 #include <raylib.h>
 #include <raymath.h>
 #include <rlgl.h>
-
 #include <string>
+#include <vector>
 
 class Application {
 public:
-  Application() = default;
-  Application(int width, int height, std::string title);
+  Application(int width, int height, bool fullscreen, std::string title);
+  ~Application();
   void Start(void);
-  virtual ~Application();
-  float DeltaTime;
-  Vector2 MouseDelta;
 
 private:
+  Camera2D camera;
+  unsigned mode;
+  Button* moveButton;
+  Button* nodeButton;
+  Button* lineButton;
+  std::size_t selectPoint1Index;
+  std::size_t selectPoint2Index;
+  Graph<unsigned> connectionGraph;
+  void resetButtons(void);
+  bool touchingButtons(void);
+  std::vector<Point> points;
+  std::size_t GetHoveredPointIndex(void);
+  void RenderLines(void);
   void Setup(void);
-  virtual void Awake(void);
-  virtual void Update(void);
-  virtual void FixedUpdate(void);
+  void Awake(void);
+  void Update(void);
+  void FixedUpdate(void);
+  float DeltaTime;
+  Vector2 MouseDelta;
   int width, height, target_fps = 0;
-  bool running = false;
+  bool running;
+  bool fullscreen;
   std::string title;
 };
