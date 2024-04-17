@@ -59,6 +59,8 @@ void DrawSnapGrid(void) {
 }
 
 void Application::resetButtons(void) {
+  if (selectPoint1Index != -1)
+    points.at(selectPoint1Index).color = GRAY;
   nodeButton->color = GRAY;
   moveButton->color = GRAY;
   lineButton->color = GRAY;
@@ -151,8 +153,6 @@ void Application::FixedUpdate(void) {
           selectPoint2Index = GetHoveredPointIndex();
           if (selectPoint2Index != -1 &&
               selectPoint1Index != selectPoint2Index) {
-            std::cout << "Linking nodes:" << selectPoint1Index << " and "
-                      << selectPoint2Index << "\n";
             points.at(selectPoint1Index).color = GRAY;
             connectionGraph.at(selectPoint1Index, selectPoint2Index) = 1;
             connectionGraph.at(selectPoint2Index, selectPoint1Index) = 1;
