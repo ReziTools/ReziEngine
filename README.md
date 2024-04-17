@@ -1,4 +1,4 @@
-# Rezistenta (titlu provizoriu)
+# Rezistenta (titlu program provizoriu)
 ## Abordari numerice pentru ridicarea nedeterminarilor pentru diverse tipuri de solicitari
 
 # Instructiuni compilare
@@ -22,14 +22,11 @@ cd rezistenta
 mkdir build
 cd build
 ```
-3. Compilati folosind CMake si make:
+3. Compilati programul folosind CMake:
 ```bash
 cmake ..
-make
+cmake --build .
 ```
-Sau folosind CMake si ninja:
-```bash
-cmake .. -GNinja
-ninja
-```
+4. Executabilul se va afla in directoriul build si se va numi rezistenta(.exe)
+
 

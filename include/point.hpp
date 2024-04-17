@@ -13,7 +13,7 @@ struct Point {
                 (IsHovered(camera)) ? LIGHTGRAY : color);
   }
   void RenderTooltip(Camera2D camera) {
-    DrawText(TextFormat("{%.2f, %.2f}", position.x, position.y),
+    DrawText(TextFormat("{%.2f, %.2f}", position.x(), position.y()),
              GetWorldToScreen2D(position, camera).x,
              GetWorldToScreen2D(position, camera).y + radius + 4,
              16 / camera.zoom, BLACK);
@@ -21,7 +21,7 @@ struct Point {
   void Update(Camera2D camera) {
     mouseDistance =
         ((Vec2D)GetScreenToWorld2D(GetMousePosition(), camera) - position)
-            .mag();
+            .norm();
   }
   bool IsHovered(Camera2D camera) {
     return (mouseDistance >= 0.0f && mouseDistance <= radius / camera.zoom)

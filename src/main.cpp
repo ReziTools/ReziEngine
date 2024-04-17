@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
       ++i;
     }
   }
-  Application mainApplication(width, height, fullscreen, "REZISTENTAv0.2");
+  Application mainApplication(width, height, fullscreen, "REZISTENTAv0.2.5");
   mainApplication.Start();
   return 0;
 }

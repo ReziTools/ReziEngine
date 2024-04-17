@@ -5,7 +5,7 @@ template <typename T> class Graph {
 public:
   Graph() : node_count(0) {}
 
-  T& at(std::size_t start, std::size_t end) { return data[start][end]; }
+  T& at(std::size_t start, std::size_t end) { return data.at(start).at(end); }
 
   std::size_t GetNodeCount() const { return node_count; }
 

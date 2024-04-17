@@ -11,11 +11,12 @@ struct Button {
       : position(position), size(size), label(label), color(color) {}
   void Render(void) {
     DrawRectangleV(position, size, color);
-    DrawText(label.c_str(), position.x, position.y, 16, BLACK);
+    DrawText(label.c_str(), position.x(), position.y(), 16, BLACK);
   }
   bool IsHovered(void) {
-    return (GetMouseX() >= position.x && GetMouseX() <= (position + size).x &&
-            GetMouseY() >= position.y && GetMouseY() <= (position + size).y)
+    return (GetMouseX() >= position.x() &&
+            GetMouseX() <= (position + size).x() &&
+            GetMouseY() >= position.y() && GetMouseY() <= (position + size).y())
                ? true
                : false;
   }

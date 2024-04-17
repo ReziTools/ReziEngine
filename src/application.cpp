@@ -131,13 +131,16 @@ void Application::FixedUpdate(void) {
       break;
     }
     case 2: {
-      selectPoint1Index = GetHoveredPointIndex();
+      if (selectPoint1Index == -1 && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+        selectPoint1Index = GetHoveredPointIndex();
+      if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+        selectPoint1Index = -1;
       if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && selectPoint1Index != -1)
         points.at(selectPoint1Index).position =
             (Vec2D)GetScreenToWorld2D(GetMousePosition(), camera);
       if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) && selectPoint1Index != -1) {
-        std::cin >> points.at(selectPoint1Index).position.x >>
-            points.at(selectPoint1Index).position.y;
+        std::cin >> points.at(selectPoint1Index).position.x() >>
+            points.at(selectPoint1Index).position.y();
       }
       break;
     }
