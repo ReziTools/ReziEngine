@@ -16,16 +16,15 @@
 ```bash
 git clone https://github.com/impact112/rezistenta
 ```
-2. Navigati in directoriul proiectului
+2. Navigati in directoriul proiectului:
 ```bash
 cd rezistenta
 mkdir build
-cd build
 ```
 3. Compilati programul folosind CMake:
 ```bash
-cmake ..
-cmake --build .
+cmake build
+cmake --build build
 ```
 4. Executabilul se va afla in directoriul build si se va numi rezistenta(.exe)
 

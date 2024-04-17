@@ -2,7 +2,7 @@
 #include <cstring>
 
 int main(int argc, char** argv) {
-  int width = 800, height = 600, fullscreen = 0;
+  int width = 1200, height = 900, fullscreen = 0;
   for (int i = 1; i < argc; ++i) {
     if (!strcmp(argv[i], "-f")) {
       fullscreen = 1;
@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
       ++i;
     }
   }
-  Application mainApplication(width, height, fullscreen, "REZISTENTAv0.2.5");
+  Application mainApplication(width, height, fullscreen, "Rezistenta v0.2.6");
   mainApplication.Start();
   return 0;
 }

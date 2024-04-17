@@ -1,17 +1,17 @@
 #include "application.hpp"
-#include <iostream>
-#include <raylib.h>
 
 Application::Application(int width, int height, bool fullscreen,
                          std::string title)
     : width(width), height(height), fullscreen(fullscreen), title(title) {
   running = false;
+  nodeType = NONE;
 }
 
 Application::~Application() {
   delete moveButton;
   delete lineButton;
   delete nodeButton;
+  delete typeButton;
   CloseWindow();
 }
 
@@ -38,13 +38,16 @@ void Application::Awake(void) {
   camera = {0};
   camera.zoom = 100.0f;
   camera.target = {0, 0};
+  camera.rotation = 180.0f;
   camera.offset = (Vector2){GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
   nodeButton =
-      new Button(Vec2D(0, height - 50), Vec2D(100, 50), "Adauga nod", GRAY);
+      new Button(Vec2D(5, height - 55), Vec2D(100, 50), "Adauga nod", GRAY);
+  typeButton = new Button(Vec2D(110, height - 55), Vec2D(100, 50),
+                          PointTypeNames.at(nodeType), GRAY);
   moveButton =
-      new Button(Vec2D(100, height - 50), Vec2D(100, 50), "Muta nod", GRAY);
+      new Button(Vec2D(215, height - 55), Vec2D(100, 50), "Muta nod", GRAY);
   lineButton =
-      new Button(Vec2D(200, height - 50), Vec2D(100, 50), "Linie", GRAY);
+      new Button(Vec2D(320, height - 55), Vec2D(100, 50), "Linie", GRAY);
   mode = 0;
   selectPoint1Index = -1;
   selectPoint2Index = -1;
@@ -68,7 +71,7 @@ void Application::resetButtons(void) {
 
 bool Application::touchingButtons(void) {
   return nodeButton->IsHovered() || moveButton->IsHovered() ||
-         lineButton->IsHovered();
+         lineButton->IsHovered() || typeButton->IsHovered();
 }
 
 std::size_t Application::GetHoveredPointIndex(void) {
@@ -92,8 +95,9 @@ void Application::Update(void) {
   for (Point point : points) {
     point.RenderTooltip(camera);
   }
-  moveButton->Render();
   nodeButton->Render();
+  typeButton->Render();
+  moveButton->Render();
   lineButton->Render();
   DrawText(TextFormat(
                "FPS:%d\nFRAMETIME:%f\nCAM_X:%f\nCAM_Y:%f\nCAM_ZOOM:%f\nMODE:%d",
@@ -106,7 +110,7 @@ void Application::FixedUpdate(void) {
   if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
     Vector2 delta = MouseDelta;
     delta = Vector2Scale(delta, -1.0f / camera.zoom);
-    camera.target = Vector2Add(camera.target, delta);
+    camera.target = Vector2Subtract(camera.target, delta);
   }
 
   float wheel = GetMouseWheelMove();
@@ -114,7 +118,7 @@ void Application::FixedUpdate(void) {
     Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), camera);
     camera.offset = GetMousePosition();
     camera.target = mouseWorldPos;
-    const float zoomIncrement = 0.5f;
+    const float zoomIncrement = 1.0f;
     camera.zoom += (wheel * zoomIncrement);
     if (camera.zoom < zoomIncrement)
       camera.zoom = zoomIncrement;
@@ -124,8 +128,8 @@ void Application::FixedUpdate(void) {
     case 1: {
       if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
           GetHoveredPointIndex() == -1) {
-        points.push_back(
-            Point(GetScreenToWorld2D(GetMousePosition(), camera), 4, GRAY));
+        points.push_back(Point(GetScreenToWorld2D(GetMousePosition(), camera),
+                               nodeType, 4, BLACK));
         connectionGraph.Resize(points.size());
       }
       break;
@@ -150,13 +154,13 @@ void Application::FixedUpdate(void) {
         if (selectPoint1Index == -1) {
           selectPoint1Index = GetHoveredPointIndex();
           if (selectPoint1Index != -1) {
-            points.at(selectPoint1Index).color = GREEN;
+            points.at(selectPoint1Index).color = BLUE;
           }
         } else if (selectPoint2Index == -1) {
           selectPoint2Index = GetHoveredPointIndex();
           if (selectPoint2Index != -1 &&
               selectPoint1Index != selectPoint2Index) {
-            points.at(selectPoint1Index).color = GRAY;
+            points.at(selectPoint1Index).color = BLACK;
             connectionGraph.at(selectPoint1Index, selectPoint2Index) = 1;
             connectionGraph.at(selectPoint2Index, selectPoint1Index) = 1;
             selectPoint1Index = -1;
@@ -192,6 +196,23 @@ void Application::FixedUpdate(void) {
     lineButton->color = GREEN;
     selectPoint1Index = -1;
     selectPoint2Index = -1;
+  }
+  if (typeButton->IsClicked(MOUSE_BUTTON_LEFT)) {
+    switch (nodeType) {
+    case NONE:
+      nodeType = JOIN;
+      break;
+    case JOIN:
+      nodeType = ARTI;
+      break;
+    case ARTI:
+      nodeType = BEAR;
+      break;
+    case BEAR:
+      nodeType = NONE;
+      break;
+    }
+    typeButton->label = PointTypeNames.at(nodeType);
   }
 }
 

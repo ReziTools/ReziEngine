@@ -2,6 +2,7 @@
 #include "button.hpp"
 #include "graph.hpp"
 #include "point.hpp"
+#include <iostream>
 #include <raylib.h>
 #include <raymath.h>
 #include <rlgl.h>
@@ -17,9 +18,11 @@ public:
 private:
   Camera2D camera;
   unsigned mode;
+  PointType nodeType;
   Button* moveButton;
   Button* nodeButton;
   Button* lineButton;
+  Button* typeButton;
   std::size_t selectPoint1Index;
   std::size_t selectPoint2Index;
   Graph<unsigned> connectionGraph;
