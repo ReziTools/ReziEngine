@@ -1,10 +1,12 @@
-#include "application.hpp"
+#include "Application.hpp"
 
 Application::Application(int width, int height, bool fullscreen,
                          std::string title)
     : width(width), height(height), fullscreen(fullscreen), title(title) {
   running = false;
   nodeType = NONE;
+  coordsMode = 0;
+  coordsPos = {0.0f, 0.0f};
 }
 
 Application::~Application() {
@@ -17,6 +19,7 @@ Application::~Application() {
 
 void Application::Start(void) {
   running = true;
+  SetConfigFlags(FLAG_MSAA_4X_HINT);
   InitWindow(width, height, title.c_str());
   if (fullscreen)
     ToggleFullscreen();
@@ -25,12 +28,12 @@ void Application::Start(void) {
   this->Awake();
   while (running) {
     running = !WindowShouldClose();
-    this->FixedUpdate();
-    BeginDrawing();
     this->Update();
+    BeginDrawing();
+    this->Render();
     EndDrawing();
     DeltaTime = GetFrameTime();
-    MouseDelta = GetMouseDelta();
+    MouseDelta = (Vec2D)GetMouseDelta();
   }
 }
 
@@ -40,14 +43,14 @@ void Application::Awake(void) {
   camera.target = {0, 0};
   camera.rotation = 180.0f;
   camera.offset = (Vector2){GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
-  nodeButton =
-      new Button(Vec2D(5, height - 55), Vec2D(100, 50), "Adauga nod", GRAY);
-  typeButton = new Button(Vec2D(110, height - 55), Vec2D(100, 50),
+  nodeButton = new Button(Vec2D(5, height - 55), Vec2D(150, 50),
+                          "Adauga/sterge\nnod", GRAY);
+  typeButton = new Button(Vec2D(160, height - 55), Vec2D(100, 50),
                           PointTypeNames.at(nodeType), GRAY);
   moveButton =
-      new Button(Vec2D(215, height - 55), Vec2D(100, 50), "Muta nod", GRAY);
+      new Button(Vec2D(265, height - 55), Vec2D(100, 50), "Muta nod", GRAY);
   lineButton =
-      new Button(Vec2D(320, height - 55), Vec2D(100, 50), "Linie", GRAY);
+      new Button(Vec2D(370, height - 55), Vec2D(100, 50), "Linie", GRAY);
   mode = 0;
   selectPoint1Index = -1;
   selectPoint2Index = -1;
@@ -82,31 +85,33 @@ std::size_t Application::GetHoveredPointIndex(void) {
   return -1;
 }
 
-void Application::Update(void) {
+void Application::Render(void) {
   ClearBackground(WHITE);
   BeginMode2D(camera);
   DrawSnapGrid();
   RenderLines();
   for (Point point : points) {
     point.Render(camera);
-    point.RenderTooltip(camera);
   }
   EndMode2D();
   for (Point point : points) {
-    point.RenderTooltip(camera);
+    if (point.IsHovered(camera) || mode == 2)
+      point.RenderTooltip(camera);
   }
   nodeButton->Render();
   typeButton->Render();
   moveButton->Render();
   lineButton->Render();
-  DrawText(TextFormat(
-               "FPS:%d\nFRAMETIME:%f\nCAM_X:%f\nCAM_Y:%f\nCAM_ZOOM:%f\nMODE:%d",
-               GetFPS(), DeltaTime, camera.target.x, camera.target.y,
-               camera.zoom, mode),
+  DrawText(TextFormat("FPS:%d\nFRAMETIME:%f\nCAM_X:%f\nCAM_Y:%f\nCAM_ZOOM:%"
+                      "f\nMODE:%d\nCOORD MODE:%d\nSEL NODE ID:%d",
+                      GetFPS(), DeltaTime, camera.target.x, camera.target.y,
+                      camera.zoom, mode, coordsMode, selectPoint1Index),
            0, 0, 16, BLACK);
+  if (coordsMode)
+    coordsBox.Render();
 }
 
-void Application::FixedUpdate(void) {
+void Application::Update(void) {
   if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
     Vector2 delta = MouseDelta;
     delta = Vector2Scale(delta, -1.0f / camera.zoom);
@@ -115,7 +120,7 @@ void Application::FixedUpdate(void) {
 
   float wheel = GetMouseWheelMove();
   if (wheel != 0) {
-    Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), camera);
+    Vec2D mouseWorldPos = (Vec2D)GetScreenToWorld2D(GetMousePosition(), camera);
     camera.offset = GetMousePosition();
     camera.target = mouseWorldPos;
     const float zoomIncrement = 1.0f;
@@ -126,25 +131,40 @@ void Application::FixedUpdate(void) {
   if (!touchingButtons()) {
     switch (mode) {
     case 1: {
-      if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
-          GetHoveredPointIndex() == -1) {
+      selectPoint1Index = GetHoveredPointIndex();
+      if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && selectPoint1Index == -1) {
         points.push_back(Point(GetScreenToWorld2D(GetMousePosition(), camera),
                                nodeType, 4, BLACK));
         connectionGraph.Resize(points.size());
+        selectPoint1Index = -1;
+      }
+      if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && selectPoint1Index != -1) {
+        points.erase(points.begin() + selectPoint1Index);
+        connectionGraph.Remove(selectPoint1Index);
+        selectPoint1Index = -1;
       }
       break;
     }
     case 2: {
-      if (selectPoint1Index == -1 && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+      if (selectPoint1Index == -1 && coordsMode == 0 &&
+          (IsMouseButtonDown(MOUSE_BUTTON_LEFT) ||
+           IsMouseButtonDown(MOUSE_BUTTON_RIGHT)))
         selectPoint1Index = GetHoveredPointIndex();
-      if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+      if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT) &&
+          !IsMouseButtonDown(MOUSE_BUTTON_RIGHT) && coordsMode == 0)
         selectPoint1Index = -1;
       if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && selectPoint1Index != -1)
         points.at(selectPoint1Index).position =
             (Vec2D)GetScreenToWorld2D(GetMousePosition(), camera);
       if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) && selectPoint1Index != -1) {
-        std::cin >> points.at(selectPoint1Index).position.x() >>
-            points.at(selectPoint1Index).position.y();
+        if (coordsMode == 0) {
+          coordsMode = 1;
+          coordsBox = (TextBox){
+              .position = Vec2D(10.0f, 10.0f) +
+                          (Vec2D)GetWorldToScreen2D(
+                              points.at(selectPoint1Index).position, camera),
+              .size = {128.0f, 0.0f}};
+        }
       }
       break;
     }
@@ -161,8 +181,13 @@ void Application::FixedUpdate(void) {
           if (selectPoint2Index != -1 &&
               selectPoint1Index != selectPoint2Index) {
             points.at(selectPoint1Index).color = BLACK;
-            connectionGraph.at(selectPoint1Index, selectPoint2Index) = 1;
-            connectionGraph.at(selectPoint2Index, selectPoint1Index) = 1;
+            if (connectionGraph.at(selectPoint1Index, selectPoint2Index)) {
+              connectionGraph.at(selectPoint1Index, selectPoint2Index) = 0;
+              connectionGraph.at(selectPoint2Index, selectPoint1Index) = 0;
+            } else {
+              connectionGraph.at(selectPoint1Index, selectPoint2Index) = 1;
+              connectionGraph.at(selectPoint2Index, selectPoint1Index) = 1;
+            }
             selectPoint1Index = -1;
             selectPoint2Index = -1;
           }
@@ -213,6 +238,48 @@ void Application::FixedUpdate(void) {
       break;
     }
     typeButton->label = PointTypeNames.at(nodeType);
+  }
+  switch (coordsMode) {
+  case 1: {
+    coordsBox.Edit();
+    if (coordsBox.done) {
+      coordsMode = 2;
+      try {
+        coordsPos.x() = std::stof(coordsBox.data);
+      } catch (const std::invalid_argument& e) {
+        coordsMode = 0;
+        coordsBox.Reset();
+        selectPoint1Index = -1;
+      }
+      coordsBox.Reset();
+    }
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+      coordsMode = 0;
+      selectPoint1Index = -1;
+    }
+    break;
+  }
+  case 2: {
+    coordsBox.Edit();
+    if (coordsBox.done) {
+      coordsMode = 0;
+      try {
+        coordsPos.y() = std::stof(coordsBox.data);
+      } catch (const std::invalid_argument& e) {
+        coordsMode = 0;
+        coordsBox.Reset();
+        selectPoint1Index = -1;
+      }
+      coordsBox.Reset();
+      points.at(selectPoint1Index).position = coordsPos;
+      selectPoint1Index = -1;
+    }
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+      coordsMode = 0;
+      selectPoint1Index = -1;
+    }
+    break;
+  }
   }
 }
 

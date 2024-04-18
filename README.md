@@ -23,9 +23,9 @@ mkdir build
 ```
 3. Compilati programul folosind CMake:
 ```bash
-cmake build
+cmake -B build
 cmake --build build
 ```
-4. Executabilul se va afla in directoriul build si se va numi rezistenta(.exe)
+4. Executabilul se va afla in directoriul build/app si se va numi rezistenta(.exe)
 
 

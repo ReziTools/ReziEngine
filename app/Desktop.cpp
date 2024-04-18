@@ -1,4 +1,4 @@
-#include "application.hpp"
+#include "Application.hpp"
 #include <cstring>
 
 int main(int argc, char** argv) {
@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
       ++i;
     }
   }
-  Application mainApplication(width, height, fullscreen, "Rezistenta v0.2.6");
+  Application mainApplication(width, height, fullscreen, "Rezistenta v0.3.0");
   mainApplication.Start();
   return 0;
 }

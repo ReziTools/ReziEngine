@@ -1,12 +1,12 @@
 #pragma once
-#include "vector2d.hpp"
+#include "Vec2D.hpp"
 #include <map>
 #include <raylib.h>
 
 enum PointType { NONE = 0, JOIN, ARTI, BEAR };
 
 const std::map<PointType, std::string> PointTypeNames = {
-    {PointType::NONE, "Nod gol"},
+    {PointType::NONE, "Nod liber"},
     {PointType::JOIN, "Incastrare"},
     {PointType::ARTI, "Articulatie"},
     {PointType::BEAR, "Reazem"}};

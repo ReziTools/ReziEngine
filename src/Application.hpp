@@ -1,8 +1,8 @@
 #pragma once
-#include "button.hpp"
-#include "graph.hpp"
-#include "point.hpp"
-#include <iostream>
+#include "Button.hpp"
+#include "MatrixS2D.hpp"
+#include "Point.hpp"
+#include "TextBox.hpp"
 #include <raylib.h>
 #include <raymath.h>
 #include <rlgl.h>
@@ -23,9 +23,12 @@ private:
   Button* nodeButton;
   Button* lineButton;
   Button* typeButton;
+  TextBox coordsBox;
+  Vec2D coordsPos;
   std::size_t selectPoint1Index;
   std::size_t selectPoint2Index;
-  Graph<unsigned> connectionGraph;
+  std::size_t coordsMode;
+  MatrixS2D<unsigned> connectionGraph;
   void resetButtons(void);
   bool touchingButtons(void);
   std::vector<Point> points;
@@ -34,9 +37,9 @@ private:
   void Setup(void);
   void Awake(void);
   void Update(void);
-  void FixedUpdate(void);
+  void Render(void);
   float DeltaTime;
-  Vector2 MouseDelta;
+  Vec2D MouseDelta;
   int width, height, target_fps = 0;
   bool running;
   bool fullscreen;
