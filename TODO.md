@@ -25,3 +25,9 @@
 - [ ] Definire conexiuni
 - [ ] Definire forte/momente concentrate
 - [ ] Definire tip de problema
+
+### Altele
+- [ ] Separare cod in ReziEditor, ReziContext, ReziSolver
+- [ ] Parser/sintaxa REZI
+- [ ] Interfata CLI
+- [ ] Suport emscripten

@@ -107,6 +107,10 @@ void Application::Render(void) {
                       GetFPS(), DeltaTime, camera.target.x, camera.target.y,
                       camera.zoom, mode, coordsMode, selectPoint1Index),
            0, 0, 16, BLACK);
+  if (mode == 3 && selectPoint1Index != -1) {
+    DrawLineV(GetWorldToScreen2D(points.at(selectPoint1Index).position, camera),
+              GetMousePosition(), BLUE);
+  }
   if (coordsMode)
     coordsBox.Render();
 }

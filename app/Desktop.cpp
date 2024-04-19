@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
       ++i;
     }
   }
-  Application mainApplication(width, height, fullscreen, "Rezistenta v0.3.0");
+  Application mainApplication(width, height, fullscreen, "ReziEditor v0.3.1");
   mainApplication.Start();
   return 0;
 }

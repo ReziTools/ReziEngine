@@ -1,4 +1,4 @@
-# Rezistenta (titlu program provizoriu)
+# ReziEngine
 ## Abordari numerice pentru ridicarea nedeterminarilor pentru diverse tipuri de solicitari
 
 # Instructiuni compilare
