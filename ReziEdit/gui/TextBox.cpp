@@ -1,6 +1,8 @@
 #include "TextBox.hpp"
 
 void TextBox::Update(void) {
+  if (done)
+    return;
   char c = GetCharPressed();
   if (IsKeyPressed(KEY_BACKSPACE) && data.size())
     data.pop_back();
@@ -17,8 +19,6 @@ void TextBox::Edit(void) {
 
 void TextBox::Render(void) {
   Vec2D pos = position;
-  if (tooltip.length() > 0)
-    pos.y() += padding.y() + fontSize;
   DrawRectangleV(pos, GetSize(), LIGHTGRAY);
   DrawText(data.c_str(), pos.x() + padding.x(), pos.y() + padding.y(), fontSize,
            BLACK);

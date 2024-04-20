@@ -1,9 +1,7 @@
 
 ### Engine
 - [x] Graf conexiuni
-- [ ] Matrice Distante
-- [ ] Matrice Unghiuri
-- [ ] Matrice Ecuatii
+- [ ] Solver necunoscute
 
 ### Editor
 - [x] Elemente GUI
@@ -21,13 +19,10 @@
 - [ ] Diagrama N
 
 ### File format
-- [ ] Definire noduri
-- [ ] Definire conexiuni
-- [ ] Definire forte/momente concentrate
-- [ ] Definire tip de problema
+- [ ] Writing
+- [ ] Parsing
 
 ### Altele
-- [ ] Separare cod in ReziEditor, ReziContext, ReziSolver
-- [ ] Parser/sintaxa REZI
+- [x] Separare cod in ReziEditor, ReziContext, ReziSolver
 - [ ] Interfata CLI
 - [ ] Suport emscripten

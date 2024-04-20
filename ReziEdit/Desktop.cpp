@@ -1,7 +1,8 @@
-#include "Application.hpp"
+#include "Editor.hpp"
+#include "ReziContext.hpp"
 #include <cstring>
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   int width = 1200, height = 900, fullscreen = 0;
   for (int i = 1; i < argc; ++i) {
     if (!strcmp(argv[i], "-f")) {
@@ -14,7 +15,9 @@ int main(int argc, char** argv) {
       ++i;
     }
   }
-  Application mainApplication(width, height, fullscreen, "ReziEditor v0.3.1");
-  mainApplication.Start();
+  ReziContext mainContext;
+  Editor editor(width, height, fullscreen, "ReziEdit v0.4.0");
+  editor.UseContext(&mainContext);
+  editor.Start();
   return 0;
 }

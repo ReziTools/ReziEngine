@@ -19,7 +19,6 @@ git clone https://github.com/impact112/rezistenta
 2. Navigati in directoriul proiectului:
 ```bash
 cd rezistenta
-mkdir build
 ```
 3. Compilati programul folosind CMake:
 ```bash
