@@ -17,9 +17,8 @@ void ReziContext::DeleteNode(size_t index) {
 }
 
 void ReziContext::EmitReziCode(void) const {
-  Node node;
   for (size_t i = 0; i < GetNodeCount(); i++) {
-    node = Nodes.at(i);
+    const Node &node = Nodes.at(i);
     std::cout << "node[" << i << " " << (int)node.type
               << "]: " << node.position.x() << " " << node.position.y() << "\n";
   }
@@ -30,5 +29,15 @@ void ReziContext::EmitReziCode(void) const {
         std::cout << j << " ";
     }
     std::cout << "\n";
+  }
+  for (size_t i = 0; i < GetNodeCount(); i++) {
+    const Node &node = Nodes.at(i);
+    std::cout << "cforce[" << i << " "
+              << "]: " << node.cForce.x() << " " << node.cForce.y() << "\n";
+  }
+  for (size_t i = 0; i < GetNodeCount(); i++) {
+    const Node &node = Nodes.at(i);
+    std::cout << "cmoment[" << i << " "
+              << "]: " << node.cMoment << "\n";
   }
 }
