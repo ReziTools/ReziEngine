@@ -14,17 +14,17 @@
 
 1. Clonati sau descarcati proiectul de la sectiunea Releases:
 ```bash
-git clone https://github.com/impact112/rezistenta
+git clone https://github.com/impact112/ReziEngine
 ```
 2. Navigati in directoriul proiectului:
 ```bash
-cd rezistenta
+cd ReziEngine
 ```
 3. Compilati programul folosind CMake:
 ```bash
 cmake -B build
 cmake --build build
 ```
-4. Executabilul se va afla in directoriul build/app si se va numi rezistenta(.exe)
+4. Executabilul se va afla in directoriul build/ReziEdit si se va numi ReziEdit(.exe)
 
 
