@@ -1,36 +1,46 @@
 #include "TextBox.hpp"
 
-void TextBox::Update(void) {
-  if (done)
+template <typename T>
+void TextBox<T>::Render(void) const {
+  DrawTextEx(*font, data.c_str(), position, fontSize, 2.0f, (active) ? RED : BLACK);
+}
+
+template <typename T>
+void TextBox<T>::Update(void) {
+  if (!target)
     return;
+  if (IsClicked(MOUSE_BUTTON_LEFT))
+    active = true;
+  else if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !IsClicked(MOUSE_BUTTON_LEFT))
+    active = false;
+  if (!active)
+    UpdateData();
   char c = GetCharPressed();
   if (IsKeyPressed(KEY_BACKSPACE) && data.size())
     data.pop_back();
-  else if (c && (data.size() < maxLenght || !maxLenght))
+  else if (c)
     data.push_back(c);
 }
 
-void TextBox::Edit(void) {
-  if (IsKeyPressed(KEY_ENTER) && data.length() > 0)
-    done = true;
-  else
-    Update();
+template <typename T>
+void TextBox<T>::UpdateData(void) {
+  data = std::to_string(*target);
 }
 
-void TextBox::Render(void) {
-  Vec2D pos = position;
-  DrawRectangleV(pos, GetSize(), LIGHTGRAY);
-  DrawText(data.c_str(), pos.x() + padding.x(), pos.y() + padding.y(), fontSize,
-           BLACK);
+template <>
+void TextBox<std::string>::UpdateData(void) {
+  data = *target;
 }
 
-void TextBox::Reset(void) {
-  data.clear();
-  done = false;
+template <typename T>
+bool TextBox<T>::IsHovered(void) const {
+  return (GetMouseX() >= position.x() && GetMouseX() <= (position + size).x() &&
+          GetMouseY() >= position.y() && GetMouseY() <= (position + size).y())
+             ? true
+             : false;
 }
 
-Vec2D TextBox::GetSize(void) {
-  return {std::max(size.x(), (float)MeasureText(data.c_str(), fontSize)) +
-              padding.x() * 2.0f,
-          std::max(size.y(), fontSize) + padding.y() * 2.0f};
+template <typename T>
+bool TextBox<T>::IsClicked(int button) const {
+  return IsHovered() && IsMouseButtonPressed(button);
 }

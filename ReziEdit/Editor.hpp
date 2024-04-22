@@ -9,8 +9,6 @@
 enum EditorMode {
   MODE_PAN = 0,
   MODE_ADDNODE,
-  MODE_MOVNODE,
-  MODE_DELNODE,
   MODE_ADDLINE,
   MODE_DELLINE
 };
@@ -24,6 +22,7 @@ public:
   void Update(void);
   void Render(void);
   void RenderGUI(void);
+  void RenderNodeProps(void);
   void RenderDebugInfo(void);
   bool IsNodeHovered(size_t index, float radius);
   int GetHoveredNode(float radius);
@@ -31,10 +30,10 @@ public:
 
 private:
   ReziContext *context;
+  Font font;
   float guiHeight;
   Camera2D camera;
-  bool coordsBoxActive;
-  TextBox coordsBoxX, coordsBoxY;
+  TextBox<float> coordsBoxX, coordsBoxY;
   EditorMode editorMode;
   NodeType nodeType;
   unsigned selectionNodesIndex[2];
