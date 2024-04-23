@@ -28,7 +28,7 @@ void Editor::Start(void) {
     ClearBackground(BLACK);
     Render();
     RenderGUI();
-    if (selectionNodesIndex[0] != -1)
+    if (editorMode == MODE_PAN && selectionNodesIndex[0] != -1)
       RenderNodeProps();
     EndDrawing();
   }
@@ -36,7 +36,7 @@ void Editor::Start(void) {
 
 void Editor::Awake(void) {
   font = GetFontDefault();
-  guiHeight = 100.0f;
+  guiHeight = 72.0f;
   camera = {
       .offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f},
       .target = {0.0f, 0.0f},
@@ -50,6 +50,13 @@ void Editor::Awake(void) {
       .normalColor = WHITE,
       .hoverColor = LIGHTGRAY,
       .clickColor = GREEN};
+  nodeTypeButton = {
+      .position = {290.0f, 20.0f},
+      .size = {90.0f, 16.0f},
+      .label = NodeTypeNames.at(NODE_FREE),
+      .normalColor = WHITE,
+      .hoverColor = WHITE,
+      .clickColor = WHITE};
   addLineButton = {
       .position = {72.0f, 20.0f},
       .size = {32.0f, 32.0f},
@@ -64,15 +71,22 @@ void Editor::Awake(void) {
       .normalColor = WHITE,
       .hoverColor = LIGHTGRAY,
       .clickColor = GREEN};
+  deleteNodeButton = {
+      .position = {600.0f, 20.0f},
+      .size = {64.0f, 16.0f},
+      .label = "Delete",
+      .normalColor = RED,
+      .hoverColor = RED,
+      .clickColor = RED};
 
   coordsBoxX.font = &font;
   coordsBoxX.position = {260.0f, 36.0f};
-  coordsBoxX.size = {100.0f, 16.0f};
+  coordsBoxX.size = {120.0f, 16.0f};
   coordsBoxX.fontSize = 16.0f;
 
   coordsBoxY.font = &font;
   coordsBoxY.position = {260.0f, 52.0f};
-  coordsBoxY.size = {100.0f, 16.0f};
+  coordsBoxY.size = {120.0f, 16.0f};
   coordsBoxY.fontSize = 16.0f;
 
   forceBoxX.font = &font;
@@ -128,6 +142,7 @@ void Editor::Update(void) {
     context->EmitReziCode();
   if (IsKeyPressed(KEY_ESCAPE)) {
     editorMode = MODE_PAN;
+    selectionNodesIndex[0] = -1;
   }
   if (GetMouseY() > guiHeight) {
     switch (editorMode) {
@@ -140,6 +155,7 @@ void Editor::Update(void) {
           forceBoxX.target = &context->Nodes.at(selectionNodesIndex[0]).cForce.x();
           forceBoxY.target = &context->Nodes.at(selectionNodesIndex[0]).cForce.y();
           momentBox.target = &context->Nodes.at(selectionNodesIndex[0]).cMoment;
+          nodeTypeButton.label = NodeTypeNames.at(context->Nodes.at(selectionNodesIndex[0]).type);
         } else
           selectionNodesIndex[0] = -1;
       } else if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
@@ -191,12 +207,35 @@ void Editor::Update(void) {
     }
     }
   }
-  if (selectionNodesIndex[0] != -1) {
+  if (selectionNodesIndex[0] != -1 && editorMode == MODE_PAN) {
     coordsBoxX.Update();
     coordsBoxY.Update();
     forceBoxX.Update();
     forceBoxY.Update();
     momentBox.Update();
+    if (GetMouseY() < guiHeight) {
+      if (nodeTypeButton.IsClicked(MOUSE_BUTTON_LEFT)) {
+        switch (context->Nodes.at(selectionNodesIndex[0]).type) {
+        case NODE_FREE:
+          context->Nodes.at(selectionNodesIndex[0]).type = NODE_JOINT;
+          break;
+        case NODE_JOINT:
+          context->Nodes.at(selectionNodesIndex[0]).type = NODE_ARTICULATION;
+          break;
+        case NODE_ARTICULATION:
+          context->Nodes.at(selectionNodesIndex[0]).type = NODE_BEARING;
+          break;
+        case NODE_BEARING:
+          context->Nodes.at(selectionNodesIndex[0]).type = NODE_FREE;
+          break;
+        }
+        nodeTypeButton.label = NodeTypeNames.at(context->Nodes.at(selectionNodesIndex[0]).type);
+      }
+    }
+    if (deleteNodeButton.IsClicked(MOUSE_BUTTON_LEFT)) {
+      context->DeleteNode(selectionNodesIndex[0]);
+      selectionNodesIndex[0] = -1;
+    }
   }
 }
 
@@ -263,8 +302,7 @@ void Editor::Render(void) {
     if (selectionNodesIndex[0] != -1 && (editorMode == MODE_ADDLINE || editorMode == MODE_DELLINE)) {
       DrawCircleV(context->Nodes.at(selectionNodesIndex[0]).position, 4.0 / camera.zoom, BLUE);
       DrawLineV(context->Nodes.at(selectionNodesIndex[0]).position, GetScreenToWorld2D(GetMousePosition(), camera), BLUE);
-    }
-    if (selectionNodesIndex[0] != -1)
+    } else if (selectionNodesIndex[0] != -1)
       DrawCircleV(context->Nodes.at(selectionNodesIndex[0]).position, 4.0 / camera.zoom, GREEN);
   }
   EndMode2D();
@@ -286,7 +324,6 @@ void Editor::RenderGUI(void) {
   DrawTextEx(font, "Nodes", {4.0f, 4.0f}, 16.0f, 2.0f, BLACK);
   DrawTextEx(font, "Connections", {72.0f, 4.0f}, 16.0f, 2.0f, BLACK);
   addNodeButton.Render();
-  deleteNodeButton.Render();
   addLineButton.Render();
   deleteLineButton.Render();
   RenderDebugInfo();
@@ -306,4 +343,6 @@ void Editor::RenderNodeProps(void) {
   forceBoxX.Render();
   forceBoxY.Render();
   momentBox.Render();
+  nodeTypeButton.Render();
+  deleteNodeButton.Render();
 }

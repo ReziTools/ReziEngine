@@ -35,8 +35,8 @@ private:
   Camera2D camera;
   TextBox<float> coordsBoxX, coordsBoxY, forceBoxX, forceBoxY, momentBox;
   EditorMode editorMode;
-  unsigned selectionNodesIndex[2];
-  Button addNodeButton, nodeTypeButton, moveNodeButton, deleteNodeButton, addLineButton, deleteLineButton;
+  int selectionNodesIndex[2];
+  Button addNodeButton, nodeTypeButton, deleteNodeButton, addLineButton, deleteLineButton;
   int width, height;
   bool fullscreen;
   std::string title;
