@@ -33,9 +33,8 @@ private:
   Font font;
   float guiHeight;
   Camera2D camera;
-  TextBox<float> coordsBoxX, coordsBoxY;
+  TextBox<float> coordsBoxX, coordsBoxY, forceBoxX, forceBoxY, momentBox;
   EditorMode editorMode;
-  NodeType nodeType;
   unsigned selectionNodesIndex[2];
   Button addNodeButton, nodeTypeButton, moveNodeButton, deleteNodeButton, addLineButton, deleteLineButton;
   int width, height;

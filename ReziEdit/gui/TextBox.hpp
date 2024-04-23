@@ -19,6 +19,7 @@ public:
 
 private:
   void UpdateData(void);
+  void UpdateTarget(void);
   std::string data;
 };
 

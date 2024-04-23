@@ -15,7 +15,7 @@ void Editor::UseContext(ReziContext *_context) {
 
 void Editor::Start(void) {
   if (context == nullptr)
-    throw "Context not provided, exiting.";
+    throw std::runtime_error("Context not provided, exiting.");
   InitWindow(width, height, title.c_str());
   SetWindowState(FLAG_WINDOW_RESIZABLE);
   SetExitKey(0);
@@ -74,7 +74,22 @@ void Editor::Awake(void) {
   coordsBoxY.position = {260.0f, 52.0f};
   coordsBoxY.size = {100.0f, 16.0f};
   coordsBoxY.fontSize = 16.0f;
-  nodeType = NODE_FREE;
+
+  forceBoxX.font = &font;
+  forceBoxX.position = {488.0f, 20.0f};
+  forceBoxX.size = {100.0f, 16.0f};
+  forceBoxX.fontSize = 16.0f;
+
+  forceBoxY.font = &font;
+  forceBoxY.position = {488.0f, 36.0f};
+  forceBoxY.size = {100.0f, 16.0f};
+  forceBoxY.fontSize = 16.0f;
+
+  momentBox.font = &font;
+  momentBox.position = {488.0f, 52.0f};
+  momentBox.size = {100.0f, 16.0f};
+  momentBox.fontSize = 16.0f;
+
   editorMode = MODE_PAN;
   selectionNodesIndex[0] = -1;
   selectionNodesIndex[1] = -1;
@@ -102,23 +117,6 @@ void Editor::Update(void) {
   if (addNodeButton.IsClicked(MOUSE_BUTTON_LEFT)) {
     editorMode = MODE_ADDNODE;
   }
-  if (nodeTypeButton.IsClicked(MOUSE_BUTTON_LEFT)) {
-    switch (nodeType) {
-    case NODE_FREE:
-      nodeType = NODE_JOINT;
-      break;
-    case NODE_JOINT:
-      nodeType = NODE_ARTICULATION;
-      break;
-    case NODE_ARTICULATION:
-      nodeType = NODE_BEARING;
-      break;
-    case NODE_BEARING:
-      nodeType = NODE_JOINT;
-      break;
-    }
-    nodeTypeButton.label = NodeTypeNames.at(nodeType);
-  }
 
   if (addLineButton.IsClicked(MOUSE_BUTTON_LEFT)) {
     editorMode = MODE_ADDLINE;
@@ -139,21 +137,20 @@ void Editor::Update(void) {
           selectionNodesIndex[0] = GetHoveredNode(6.0f);
           coordsBoxX.target = &context->Nodes.at(selectionNodesIndex[0]).position.x();
           coordsBoxY.target = &context->Nodes.at(selectionNodesIndex[0]).position.y();
+          forceBoxX.target = &context->Nodes.at(selectionNodesIndex[0]).cForce.x();
+          forceBoxY.target = &context->Nodes.at(selectionNodesIndex[0]).cForce.y();
+          momentBox.target = &context->Nodes.at(selectionNodesIndex[0]).cMoment;
         } else
           selectionNodesIndex[0] = -1;
       } else if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
         if (GetHoveredNode(8.0f) != -1)
           context->Nodes.at(GetHoveredNode(8.0f)).position = Vec2D(GetScreenToWorld2D(GetMousePosition(), camera));
       }
-      if (selectionNodesIndex[0] != -1) {
-        coordsBoxX.Update();
-        coordsBoxY.Update();
-      }
       break;
     }
     case MODE_ADDNODE: {
       if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && GetHoveredNode(6.0f) == -1) {
-        context->AddNode({.type = nodeType,
+        context->AddNode({.type = NODE_FREE,
                           .position = Vec2D(GetScreenToWorld2D(GetMousePosition(), camera)),
                           .cForce = {0.0f, 0.0f},
                           .cMoment = 0.0f});
@@ -194,12 +191,19 @@ void Editor::Update(void) {
     }
     }
   }
+  if (selectionNodesIndex[0] != -1) {
+    coordsBoxX.Update();
+    coordsBoxY.Update();
+    forceBoxX.Update();
+    forceBoxY.Update();
+    momentBox.Update();
+  }
 }
 
 void Editor::RenderDebugInfo(void) {
-  DrawText(
-      TextFormat("FPS: %d\nNodeCount: %d\nHoveredNode: %d\nEditorMode: %d\nCamera: x:%.2f y:%.2f zoom:%.2f\nMouse: x:%.2f y:%.2f", GetFPS(), context->GetNodeCount(), GetHoveredNode(6.0f), editorMode, camera.target.x, camera.target.y, camera.zoom, GetScreenToWorld2D(GetMousePosition(), camera).x, GetScreenToWorld2D(GetMousePosition(), camera).y),
-      5, guiHeight + 5.0f, 16, LIME);
+  DrawTextEx(font,
+             TextFormat("FPS: %d\nNodeCount: %d\nHoveredNode: %d\nEditorMode: %d\nCamera: x:%.2f y:%.2f zoom:%.2f\nMouse: x:%.2f y:%.2f", GetFPS(), context->GetNodeCount(), GetHoveredNode(6.0f), editorMode, camera.target.x, camera.target.y, camera.zoom, GetScreenToWorld2D(GetMousePosition(), camera).x, GetScreenToWorld2D(GetMousePosition(), camera).y),
+             {4.0f, guiHeight + 5.0f}, 16.0f, 2.0f, LIME);
 }
 
 void RenderGrid(float interval) {
@@ -299,4 +303,7 @@ void Editor::RenderNodeProps(void) {
   DrawTextEx(font, " CMoment:", {400.0f, 52.0f}, 16.0f, 2.0f, BLACK);
   coordsBoxX.Render();
   coordsBoxY.Render();
+  forceBoxX.Render();
+  forceBoxY.Render();
+  momentBox.Render();
 }
