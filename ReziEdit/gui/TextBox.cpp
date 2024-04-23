@@ -75,3 +75,7 @@ void TextBox<double>::UpdateTarget(void) {
     return;
   }
 }
+
+template class TextBox<std::string>;
+template class TextBox<float>;
+template class TextBox<double>;

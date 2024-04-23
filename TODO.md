@@ -8,8 +8,7 @@
 - [x] Adaugare noduri
 - [x] Stergere noduri
 - [x] Modificare pozitie noduri
-- [x] Snap to grid
-- [ ] Modificare tip noduri
+- [x] Modificare tip noduri
 - [ ] Modificare parametrica distante/unghiuri
 - [ ] Hasuri incastrari/reazeme
 
@@ -19,7 +18,7 @@
 - [ ] Diagrama N
 
 ### File format
-- [ ] Writing
+- [x] Writing
 - [ ] Parsing
 
 ### Altele

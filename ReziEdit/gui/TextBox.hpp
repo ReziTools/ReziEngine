@@ -23,6 +23,3 @@ private:
   std::string data;
 };
 
-template class TextBox<std::string>;
-template class TextBox<float>;
-template class TextBox<double>;
