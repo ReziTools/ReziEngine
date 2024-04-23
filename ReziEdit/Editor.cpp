@@ -135,7 +135,7 @@ void Editor::Update(void) {
       nodeType = NODE_BEARING;
       break;
     case NODE_BEARING:
-      nodeType = NODE_JOINT;
+      nodeType = NODE_FREE;
       break;
     }
     nodeTypeButton.label = NodeTypeNames.at(nodeType);
