@@ -3,17 +3,26 @@
 #include <raylib.h>
 #include <string>
 
-struct TextBox {
+template <typename T>
+class TextBox {
+public:
+  void Render(void) const;
   void Update(void);
-  void Render(void);
-  void Edit(void);
-  void Reset(void);
-  Vec2D GetSize(void);
-  bool done;
+  bool IsHovered(void) const;
+  bool IsClicked(int button) const;
+  bool active = false;
+  T *target = nullptr;
+  Font *font = nullptr;
+  Vec2D position = {0.0f, 0.0f};
+  Vec2D size = {0.0f, 0.0f};
+  float fontSize = 32.0f;
+
+private:
+  void UpdateData(void);
+  void UpdateTarget(void);
   std::string data;
-  size_t maxLenght;
-  float fontSize;
-  Vec2D position;
-  Vec2D size;
-  Vec2D padding;
 };
+
+template class TextBox<std::string>;
+template class TextBox<float>;
+template class TextBox<double>;

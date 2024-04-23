@@ -7,9 +7,7 @@ void Button::Render(void) {
     DrawRectangleV(position, size, hoverColor);
   else
     DrawRectangleV(position, size, normalColor);
-  DrawRectangleLinesEx(
-      (Rectangle){position.x(), position.y(), size.x(), size.y()}, 2.0f, BLACK);
-  DrawText(label.c_str(), position.x() + 5, position.y() + 5, 16, BLACK);
+  DrawText(label.c_str(), position.x(), position.y(), 16, BLACK);
 }
 
 bool Button::IsHovered(void) {

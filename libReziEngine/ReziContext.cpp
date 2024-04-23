@@ -32,12 +32,10 @@ void ReziContext::EmitReziCode(void) const {
   }
   for (size_t i = 0; i < GetNodeCount(); i++) {
     const Node &node = Nodes.at(i);
-    std::cout << "cforce[" << i << " "
-              << "]: " << node.cForce.x() << " " << node.cForce.y() << "\n";
+    std::cout << "cforce[" << i << "]: " << node.cForce.x() << " " << node.cForce.y() << "\n";
   }
   for (size_t i = 0; i < GetNodeCount(); i++) {
     const Node &node = Nodes.at(i);
-    std::cout << "cmoment[" << i << " "
-              << "]: " << node.cMoment << "\n";
+    std::cout << "cmoment[" << i << "]: " << node.cMoment << "\n";
   }
 }

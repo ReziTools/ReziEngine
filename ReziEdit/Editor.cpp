@@ -4,13 +4,18 @@ Editor::Editor(int width, int height, bool fullscreen, std::string title) : widt
   context = nullptr;
 }
 
+Editor::~Editor(void) {
+  UnloadFont(font);
+  CloseWindow();
+}
+
 void Editor::UseContext(ReziContext *_context) {
   context = _context;
 }
 
 void Editor::Start(void) {
   if (context == nullptr)
-    throw "Context not provided, exiting.";
+    throw std::runtime_error("Context not provided, exiting.");
   InitWindow(width, height, title.c_str());
   SetWindowState(FLAG_WINDOW_RESIZABLE);
   SetExitKey(0);
@@ -23,12 +28,15 @@ void Editor::Start(void) {
     ClearBackground(BLACK);
     Render();
     RenderGUI();
+    if (editorMode == MODE_PAN && selectionNodesIndex[0] != -1)
+      RenderNodeProps();
     EndDrawing();
   }
 }
 
 void Editor::Awake(void) {
-  guiHeight = 60.0f;
+  font = GetFontDefault();
+  guiHeight = 72.0f;
   camera = {
       .offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f},
       .target = {0.0f, 0.0f},
@@ -43,59 +51,59 @@ void Editor::Awake(void) {
       .hoverColor = LIGHTGRAY,
       .clickColor = GREEN};
   nodeTypeButton = {
-      .position = {40.0f, 20.0f},
-      .size = {96.0f, 32.0f},
+      .position = {290.0f, 20.0f},
+      .size = {90.0f, 16.0f},
       .label = NodeTypeNames.at(NODE_FREE),
       .normalColor = WHITE,
-      .hoverColor = LIGHTGRAY,
-      .clickColor = GREEN};
-  moveNodeButton = {
-      .position = {140.0f, 20.0f},
-      .size = {32.0f, 32.0f},
-      .label = "M",
-      .normalColor = WHITE,
-      .hoverColor = LIGHTGRAY,
-      .clickColor = GREEN};
-  deleteNodeButton = {
-      .position = {176.0f, 20.0f},
-      .size = {32.0f, 32.0f},
-      .label = "-",
-      .normalColor = WHITE,
-      .hoverColor = LIGHTGRAY,
-      .clickColor = GREEN};
+      .hoverColor = WHITE,
+      .clickColor = WHITE};
   addLineButton = {
-      .position = {224.0f, 20.0f},
+      .position = {72.0f, 20.0f},
       .size = {32.0f, 32.0f},
       .label = "+",
       .normalColor = WHITE,
       .hoverColor = LIGHTGRAY,
       .clickColor = GREEN};
   deleteLineButton = {
-      .position = {260.0f, 20.0f},
+      .position = {108.0f, 20.0f},
       .size = {32.0f, 32.0f},
       .label = "-",
       .normalColor = WHITE,
       .hoverColor = LIGHTGRAY,
       .clickColor = GREEN};
+  deleteNodeButton = {
+      .position = {600.0f, 20.0f},
+      .size = {64.0f, 16.0f},
+      .label = "Delete",
+      .normalColor = RED,
+      .hoverColor = RED,
+      .clickColor = RED};
 
-  coordsBoxX = {
-      .done = 0,
-      .data = "",
-      .maxLenght = 8,
-      .fontSize = 32.0f,
-      .position = {4.0f, 64.0f},
-      .size = {64.0f, 16.0f},
-      .padding = {2.0f, 2.0f}};
-  coordsBoxY = {
-      .done = 0,
-      .data = "",
-      .maxLenght = 8,
-      .fontSize = 32.0f,
-      .position = {76.0f, 64.0f},
-      .size = {64.0f, 16.0f},
-      .padding = {2.0f, 2.0f}};
-  coordsBoxActive = false;
-  nodeType = NODE_FREE;
+  coordsBoxX.font = &font;
+  coordsBoxX.position = {260.0f, 36.0f};
+  coordsBoxX.size = {120.0f, 16.0f};
+  coordsBoxX.fontSize = 16.0f;
+
+  coordsBoxY.font = &font;
+  coordsBoxY.position = {260.0f, 52.0f};
+  coordsBoxY.size = {120.0f, 16.0f};
+  coordsBoxY.fontSize = 16.0f;
+
+  forceBoxX.font = &font;
+  forceBoxX.position = {488.0f, 20.0f};
+  forceBoxX.size = {100.0f, 16.0f};
+  forceBoxX.fontSize = 16.0f;
+
+  forceBoxY.font = &font;
+  forceBoxY.position = {488.0f, 36.0f};
+  forceBoxY.size = {100.0f, 16.0f};
+  forceBoxY.fontSize = 16.0f;
+
+  momentBox.font = &font;
+  momentBox.position = {488.0f, 52.0f};
+  momentBox.size = {100.0f, 16.0f};
+  momentBox.fontSize = 16.0f;
+
   editorMode = MODE_PAN;
   selectionNodesIndex[0] = -1;
   selectionNodesIndex[1] = -1;
@@ -123,29 +131,7 @@ void Editor::Update(void) {
   if (addNodeButton.IsClicked(MOUSE_BUTTON_LEFT)) {
     editorMode = MODE_ADDNODE;
   }
-  if (nodeTypeButton.IsClicked(MOUSE_BUTTON_LEFT)) {
-    switch (nodeType) {
-    case NODE_FREE:
-      nodeType = NODE_JOINT;
-      break;
-    case NODE_JOINT:
-      nodeType = NODE_ARTICULATION;
-      break;
-    case NODE_ARTICULATION:
-      nodeType = NODE_BEARING;
-      break;
-    case NODE_BEARING:
-      nodeType = NODE_FREE;
-      break;
-    }
-    nodeTypeButton.label = NodeTypeNames.at(nodeType);
-  }
-  if (deleteNodeButton.IsClicked(MOUSE_BUTTON_LEFT)) {
-    editorMode = MODE_DELNODE;
-  }
-  if (moveNodeButton.IsClicked(MOUSE_BUTTON_LEFT)) {
-    editorMode = MODE_MOVNODE;
-  }
+
   if (addLineButton.IsClicked(MOUSE_BUTTON_LEFT)) {
     editorMode = MODE_ADDLINE;
   }
@@ -156,34 +142,34 @@ void Editor::Update(void) {
     context->EmitReziCode();
   if (IsKeyPressed(KEY_ESCAPE)) {
     editorMode = MODE_PAN;
-    coordsBoxX.Reset();
-    coordsBoxY.Reset();
-    coordsBoxActive = false;
+    selectionNodesIndex[0] = -1;
   }
   if (GetMouseY() > guiHeight) {
     switch (editorMode) {
-    case MODE_PAN:
-      break;
-    case MODE_ADDNODE: {
-      if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && GetHoveredNode(6.0f) == -1) {
-        context->AddNode({.type = nodeType,
-                          .position = Vec2D(GetScreenToWorld2D(GetMousePosition(), camera)),
-                          .cForce = {0.0f, 0.0f},
-                          .cMoment = 0.0f});
+    case MODE_PAN: {
+      if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        if (GetHoveredNode(6.0f) != -1) {
+          selectionNodesIndex[0] = GetHoveredNode(6.0f);
+          coordsBoxX.target = &context->Nodes.at(selectionNodesIndex[0]).position.x();
+          coordsBoxY.target = &context->Nodes.at(selectionNodesIndex[0]).position.y();
+          forceBoxX.target = &context->Nodes.at(selectionNodesIndex[0]).cForce.x();
+          forceBoxY.target = &context->Nodes.at(selectionNodesIndex[0]).cForce.y();
+          momentBox.target = &context->Nodes.at(selectionNodesIndex[0]).cMoment;
+          nodeTypeButton.label = NodeTypeNames.at(context->Nodes.at(selectionNodesIndex[0]).type);
+        } else
+          selectionNodesIndex[0] = -1;
+      } else if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
+        if (GetHoveredNode(8.0f) != -1)
+          context->Nodes.at(GetHoveredNode(8.0f)).position = Vec2D(GetScreenToWorld2D(GetMousePosition(), camera));
       }
       break;
     }
-    case MODE_DELNODE: {
-      if (GetHoveredNode(6.0f) != -1 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-        context->DeleteNode(GetHoveredNode(6.0f));
-      break;
-    }
-    case MODE_MOVNODE: {
-      if (GetHoveredNode(12.0f) != -1 && IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !coordsBoxActive)
-        context->Nodes.at(GetHoveredNode(12.0f)).position = Vec2D(GetScreenToWorld2D(GetMousePosition(), camera));
-      if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && GetHoveredNode(6.0f) != -1 && !coordsBoxActive) {
-        coordsBoxActive = true;
-        selectionNodesIndex[0] = GetHoveredNode(6.0f);
+    case MODE_ADDNODE: {
+      if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && GetHoveredNode(6.0f) == -1) {
+        context->AddNode({.type = NODE_FREE,
+                          .position = Vec2D(GetScreenToWorld2D(GetMousePosition(), camera)),
+                          .cForce = {0.0f, 0.0f},
+                          .cMoment = 0.0f});
       }
       break;
     }
@@ -221,39 +207,42 @@ void Editor::Update(void) {
     }
     }
   }
-  if (coordsBoxActive) {
-    Vec2D coords;
-    coordsBoxY.position.x() = coordsBoxX.GetSize().x() + 8.0f;
-    if (!coordsBoxX.done)
-      coordsBoxX.Edit();
-    else
-      coordsBoxY.Edit();
-    if (coordsBoxY.done) {
-      try {
-        coords.x() = std::stof(coordsBoxX.data);
-        coords.y() = std::stof(coordsBoxY.data);
-      } catch (const std::invalid_argument &e) {
-        coordsBoxX.Reset();
-        coordsBoxY.Reset();
-        coordsBoxActive = false;
-        selectionNodesIndex[0] = -1;
-        return;
+  if (selectionNodesIndex[0] != -1 && editorMode == MODE_PAN) {
+    coordsBoxX.Update();
+    coordsBoxY.Update();
+    forceBoxX.Update();
+    forceBoxY.Update();
+    momentBox.Update();
+    if (GetMouseY() < guiHeight) {
+      if (nodeTypeButton.IsClicked(MOUSE_BUTTON_LEFT)) {
+        switch (context->Nodes.at(selectionNodesIndex[0]).type) {
+        case NODE_FREE:
+          context->Nodes.at(selectionNodesIndex[0]).type = NODE_JOINT;
+          break;
+        case NODE_JOINT:
+          context->Nodes.at(selectionNodesIndex[0]).type = NODE_ARTICULATION;
+          break;
+        case NODE_ARTICULATION:
+          context->Nodes.at(selectionNodesIndex[0]).type = NODE_BEARING;
+          break;
+        case NODE_BEARING:
+          context->Nodes.at(selectionNodesIndex[0]).type = NODE_FREE;
+          break;
+        }
+        nodeTypeButton.label = NodeTypeNames.at(context->Nodes.at(selectionNodesIndex[0]).type);
       }
-      context->Nodes.at(selectionNodesIndex[0]).position = coords;
-      coordsBoxX.Reset();
-      coordsBoxY.Reset();
-      coordsBoxActive = false;
+    }
+    if (deleteNodeButton.IsClicked(MOUSE_BUTTON_LEFT)) {
+      context->DeleteNode(selectionNodesIndex[0]);
       selectionNodesIndex[0] = -1;
-      return;
     }
   }
-  guiHeight = (coordsBoxActive) ? 104.0f : 60.0f;
 }
 
 void Editor::RenderDebugInfo(void) {
-  DrawText(
-      TextFormat("FPS: %d\nNodeCount: %d\nHoveredNode: %d\nEditorMode: %d\nCamera: x:%.2f y:%.2f zoom:%.2f\nMouse: x:%.2f y:%.2f", GetFPS(), context->GetNodeCount(), GetHoveredNode(6.0f), editorMode, camera.target.x, camera.target.y, camera.zoom, GetScreenToWorld2D(GetMousePosition(), camera).x, GetScreenToWorld2D(GetMousePosition(), camera).y),
-      5, guiHeight + 5.0f, 16, LIME);
+  DrawTextEx(font,
+             TextFormat("FPS: %d\nNodeCount: %d\nHoveredNode: %d\nEditorMode: %d\nCamera: x:%.2f y:%.2f zoom:%.2f\nMouse: x:%.2f y:%.2f", GetFPS(), context->GetNodeCount(), GetHoveredNode(6.0f), editorMode, camera.target.x, camera.target.y, camera.zoom, GetScreenToWorld2D(GetMousePosition(), camera).x, GetScreenToWorld2D(GetMousePosition(), camera).y),
+             {4.0f, guiHeight + 5.0f}, 16.0f, 2.0f, LIME);
 }
 
 void RenderGrid(float interval) {
@@ -313,15 +302,10 @@ void Editor::Render(void) {
     if (selectionNodesIndex[0] != -1 && (editorMode == MODE_ADDLINE || editorMode == MODE_DELLINE)) {
       DrawCircleV(context->Nodes.at(selectionNodesIndex[0]).position, 4.0 / camera.zoom, BLUE);
       DrawLineV(context->Nodes.at(selectionNodesIndex[0]).position, GetScreenToWorld2D(GetMousePosition(), camera), BLUE);
-    }
+    } else if (selectionNodesIndex[0] != -1)
+      DrawCircleV(context->Nodes.at(selectionNodesIndex[0]).position, 4.0 / camera.zoom, GREEN);
   }
   EndMode2D();
-  if (editorMode == MODE_MOVNODE) {
-    for (Node node : context->Nodes) {
-      std::string coordsText = TextFormat("x:%.2f y:%.2f", node.position.x(), node.position.y());
-      DrawText(coordsText.c_str(), GetWorldToScreen2D(node.position, camera).x - MeasureText(coordsText.c_str(), 8) / 2.0f, GetWorldToScreen2D(node.position, camera).y + 4, 4, BLACK);
-    }
-  }
 }
 
 bool Editor::IsNodeHovered(size_t index, float radius) {
@@ -337,22 +321,28 @@ int Editor::GetHoveredNode(float radius) {
 
 void Editor::RenderGUI(void) {
   DrawRectangle(0, 0, GetScreenWidth(), guiHeight, LIGHTGRAY);
-  DrawText("Nodes", 4, 4, 16, BLACK);
-  DrawText("Connections", 224, 4, 16, BLACK);
+  DrawTextEx(font, "Nodes", {4.0f, 4.0f}, 16.0f, 2.0f, BLACK);
+  DrawTextEx(font, "Connections", {72.0f, 4.0f}, 16.0f, 2.0f, BLACK);
   addNodeButton.Render();
-  nodeTypeButton.Render();
-  moveNodeButton.Render();
-  deleteNodeButton.Render();
   addLineButton.Render();
   deleteLineButton.Render();
-  if (coordsBoxActive) {
-    DrawRectangle(0, 60, GetScreenWidth(), 44, GRAY);
-    coordsBoxX.Render();
-    coordsBoxY.Render();
-  }
   RenderDebugInfo();
 }
 
-Editor::~Editor(void) {
-  CloseWindow();
+void Editor::RenderNodeProps(void) {
+  DrawRectangle(236, 0, 6000, guiHeight, GRAY);
+  DrawTextEx(font, TextFormat("Node (%d) properties:", selectionNodesIndex[0]), {240.0f, 4.0f}, 16.0f, 2.0f, BLACK);
+  DrawTextEx(font, "Type:", {240.0f, 20.0f}, 16.0f, 2.0f, BLACK);
+  DrawTextEx(font, "X:", {240.0f, 36.0f}, 16.0f, 2.0f, BLACK);
+  DrawTextEx(font, "Y:", {240.0f, 52.0f}, 16.0f, 2.0f, BLACK);
+  DrawTextEx(font, "CForce X:", {400.0f, 20.0f}, 16.0f, 2.0f, BLACK);
+  DrawTextEx(font, "CForce Y:", {400.0f, 36.0f}, 16.0f, 2.0f, BLACK);
+  DrawTextEx(font, " CMoment:", {400.0f, 52.0f}, 16.0f, 2.0f, BLACK);
+  coordsBoxX.Render();
+  coordsBoxY.Render();
+  forceBoxX.Render();
+  forceBoxY.Render();
+  momentBox.Render();
+  nodeTypeButton.Render();
+  deleteNodeButton.Render();
 }
