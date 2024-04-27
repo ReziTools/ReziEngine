@@ -1,6 +1,6 @@
 # ReziEngine
 ## Abordari numerice pentru ridicarea nedeterminarilor pentru diverse tipuri de solicitari
-## Numerical approaches for ressolving indeterminacies for various types of mechanical loads
+## Numerical approaches for resolving indeterminacies for various types of mechanical loads
 
 # Building instructions
 
@@ -30,7 +30,7 @@ cmake --build build
 4. The executable will be in the build/ReziEdit directory and will be named ReziEdit(.exe)
 ```bash
 ./build/ReziEdit/ReziEdit # On Linux/FreeBSD/macOS
-./build/ReziEdit/ReziEdit.exe # On windows using MSYS2
+./build/ReziEdit/ReziEdit.exe # On Windows using MSYS2
 ```
 
 
