@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
     }
   }
   ReziContext mainContext;
-  Editor editor(width, height, fullscreen, "ReziEdit v0.5.0");
+  Editor editor(width, height, fullscreen, "ReziEdit v0.6");
   editor.UseContext(&mainContext);
   editor.Start();
   return 0;

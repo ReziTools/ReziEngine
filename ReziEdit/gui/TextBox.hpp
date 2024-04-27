@@ -22,4 +22,3 @@ private:
   void UpdateTarget(void);
   std::string data;
 };
-

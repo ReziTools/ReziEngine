@@ -1,7 +1,9 @@
 #pragma once
 #include "ReziContext.hpp"
+#include "ReziSolver.hpp"
 #include "gui/Button.hpp"
 #include "gui/TextBox.hpp"
+#include "gui/Utils.hpp"
 #include <raylib.h>
 #include <raymath.h>
 #include <rlgl.h>
@@ -31,6 +33,7 @@ public:
 private:
   ReziContext *context;
   Font font;
+  float nodeRadius, detailLineThick, connLineThick, forceLineThick, momentLineThick;
   float guiHeight;
   Camera2D camera;
   TextBox<float> coordsBoxX, coordsBoxY, forceBoxX, forceBoxY, momentBox;

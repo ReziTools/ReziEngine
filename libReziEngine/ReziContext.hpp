@@ -24,7 +24,7 @@ struct Node {
   Vec2D cForce;
   float cMoment;
   Vec2D rForce;
-  Vec2D rMoment;
+  float rMoment;
 };
 
 struct ReziContext {

@@ -1,30 +1,36 @@
 # ReziEngine
 ## Abordari numerice pentru ridicarea nedeterminarilor pentru diverse tipuri de solicitari
+## Numerical approaches for ressolving indeterminacies for various types of mechanical loads
 
-# Instructiuni compilare
+# Building instructions
 
-## Programe/librarii necesare:
-- Compilator C++ compatibil cu C++11 - Clang/GCC/MSVC
-- [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) - Optional pentru suport web
+## Dependencies:
+- C++ compatibile cu compiler - Clang/GCC
+- POSIX subsystem - MSYS2+MinGW (Windows only)
+- [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) - Optional for web support
 - [Raylib](https://github.com/raysan5/raylib/releases/tag/5.0) 5.0
 - [Eigen](https://gitlab.com/libeigen/eigen/-/releases/3.4.0) 3.4.0
-- [CMake](https://cmake.org/download/) 3.29.1 + Ninja/GNU make
+- [CMake](https://cmake.org/download/) 3.29.1 + Ninja
 
-## Pasi compilare:
+## Build steps:
 
-1. Clonati sau descarcati proiectul de la sectiunea Releases:
+1. Clone using git or download from the releases section:
 ```bash
 git clone https://github.com/impact112/ReziEngine
 ```
-2. Navigati in directoriul proiectului:
+2. Navigate into the project directory:
 ```bash
 cd ReziEngine
 ```
-3. Compilati programul folosind CMake:
+3. Build the program using CMake:
 ```bash
-cmake -B build
+cmake -B build -G "Ninja"
 cmake --build build
 ```
-4. Executabilul se va afla in directoriul build/ReziEdit si se va numi ReziEdit(.exe)
+4. The executable will be in the build/ReziEdit directory and will be named ReziEdit(.exe)
+```bash
+./build/ReziEdit/ReziEdit # On Linux/FreeBSD/macOS
+./build/ReziEdit/ReziEdit.exe # On windows using MSYS2
+```
 
 

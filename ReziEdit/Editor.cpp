@@ -16,6 +16,7 @@ void Editor::UseContext(ReziContext *_context) {
 void Editor::Start(void) {
   if (context == nullptr)
     throw std::runtime_error("Context not provided, exiting.");
+  SetConfigFlags(FLAG_MSAA_4X_HINT);
   InitWindow(width, height, title.c_str());
   SetWindowState(FLAG_WINDOW_RESIZABLE);
   SetExitKey(0);
@@ -104,6 +105,11 @@ void Editor::Awake(void) {
   momentBox.size = {100.0f, 16.0f};
   momentBox.fontSize = 16.0f;
 
+  nodeRadius = 5.0f;
+  connLineThick = 2.0f;
+  detailLineThick = 1.25f;
+  forceLineThick = 1.5f;
+
   editorMode = MODE_PAN;
   selectionNodesIndex[0] = -1;
   selectionNodesIndex[1] = -1;
@@ -140,6 +146,8 @@ void Editor::Update(void) {
   }
   if (IsKeyPressed(KEY_E))
     context->EmitReziCode();
+  if (IsKeyPressed(KEY_S))
+    ReziSolver::FakeSolver(*context);
   if (IsKeyPressed(KEY_ESCAPE)) {
     editorMode = MODE_PAN;
     selectionNodesIndex[0] = -1;
@@ -148,8 +156,8 @@ void Editor::Update(void) {
     switch (editorMode) {
     case MODE_PAN: {
       if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        if (GetHoveredNode(6.0f) != -1) {
-          selectionNodesIndex[0] = GetHoveredNode(6.0f);
+        if (GetHoveredNode(nodeRadius) != -1) {
+          selectionNodesIndex[0] = GetHoveredNode(nodeRadius);
           coordsBoxX.target = &context->Nodes.at(selectionNodesIndex[0]).position.x();
           coordsBoxY.target = &context->Nodes.at(selectionNodesIndex[0]).position.y();
           forceBoxX.target = &context->Nodes.at(selectionNodesIndex[0]).cForce.x();
@@ -159,13 +167,13 @@ void Editor::Update(void) {
         } else
           selectionNodesIndex[0] = -1;
       } else if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
-        if (GetHoveredNode(8.0f) != -1)
-          context->Nodes.at(GetHoveredNode(8.0f)).position = Vec2D(GetScreenToWorld2D(GetMousePosition(), camera));
+        if (GetHoveredNode(nodeRadius * 2.0f) != -1)
+          context->Nodes.at(GetHoveredNode(nodeRadius * 2.0f)).position = Vec2D(GetScreenToWorld2D(GetMousePosition(), camera));
       }
       break;
     }
     case MODE_ADDNODE: {
-      if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && GetHoveredNode(6.0f) == -1) {
+      if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && GetHoveredNode(nodeRadius) == -1) {
         context->AddNode({.type = NODE_FREE,
                           .position = Vec2D(GetScreenToWorld2D(GetMousePosition(), camera)),
                           .cForce = {0.0f, 0.0f},
@@ -174,10 +182,10 @@ void Editor::Update(void) {
       break;
     }
     case MODE_ADDLINE: {
-      if (selectionNodesIndex[0] == -1 && GetHoveredNode(6.0f) != -1 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-        selectionNodesIndex[0] = GetHoveredNode(6.0f);
-      else if (selectionNodesIndex[0] != -1 && selectionNodesIndex[1] == -1 && GetHoveredNode(6.0f) != -1 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-        selectionNodesIndex[1] = GetHoveredNode(6.0f);
+      if (selectionNodesIndex[0] == -1 && GetHoveredNode(nodeRadius) != -1 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        selectionNodesIndex[0] = GetHoveredNode(nodeRadius);
+      else if (selectionNodesIndex[0] != -1 && selectionNodesIndex[1] == -1 && GetHoveredNode(nodeRadius) != -1 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        selectionNodesIndex[1] = GetHoveredNode(nodeRadius);
       else if (selectionNodesIndex[0] == selectionNodesIndex[1]) {
         selectionNodesIndex[0] = -1;
         selectionNodesIndex[1] = -1;
@@ -190,10 +198,10 @@ void Editor::Update(void) {
       break;
     }
     case MODE_DELLINE: {
-      if (selectionNodesIndex[0] == -1 && GetHoveredNode(6.0f) != -1 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-        selectionNodesIndex[0] = GetHoveredNode(6.0f);
-      else if (selectionNodesIndex[0] != -1 && selectionNodesIndex[1] == -1 && GetHoveredNode(6.0f) != -1 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-        selectionNodesIndex[1] = GetHoveredNode(6.0f);
+      if (selectionNodesIndex[0] == -1 && GetHoveredNode(nodeRadius) != -1 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        selectionNodesIndex[0] = GetHoveredNode(nodeRadius);
+      else if (selectionNodesIndex[0] != -1 && selectionNodesIndex[1] == -1 && GetHoveredNode(nodeRadius) != -1 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        selectionNodesIndex[1] = GetHoveredNode(nodeRadius);
       else if (selectionNodesIndex[0] == selectionNodesIndex[1]) {
         selectionNodesIndex[0] = -1;
         selectionNodesIndex[1] = -1;
@@ -241,7 +249,7 @@ void Editor::Update(void) {
 
 void Editor::RenderDebugInfo(void) {
   DrawTextEx(font,
-             TextFormat("FPS: %d\nNodeCount: %d\nHoveredNode: %d\nEditorMode: %d\nCamera: x:%.2f y:%.2f zoom:%.2f\nMouse: x:%.2f y:%.2f", GetFPS(), context->GetNodeCount(), GetHoveredNode(6.0f), editorMode, camera.target.x, camera.target.y, camera.zoom, GetScreenToWorld2D(GetMousePosition(), camera).x, GetScreenToWorld2D(GetMousePosition(), camera).y),
+             TextFormat("FPS: %d\nNodeCount: %d\nHoveredNode: %d\nEditorMode: %d\nCamera: x:%.2f y:%.2f zoom:%.2f\nMouse: x:%.2f y:%.2f", GetFPS(), context->GetNodeCount(), GetHoveredNode(nodeRadius), editorMode, camera.target.x, camera.target.y, camera.zoom, GetScreenToWorld2D(GetMousePosition(), camera).x, GetScreenToWorld2D(GetMousePosition(), camera).y),
              {4.0f, guiHeight + 5.0f}, 16.0f, 2.0f, LIME);
 }
 
@@ -260,51 +268,21 @@ void Editor::Render(void) {
   for (size_t i = 0; i < context->GetNodeCount(); i++)
     for (size_t j = i + 1; j < context->GetNodeCount(); j++)
       if (context->Connections.at(i).at(j))
-        DrawLineV(context->Nodes.at(i).position, context->Nodes.at(j).position, BLACK);
+        DrawLineEx(context->Nodes.at(i).position, context->Nodes.at(j).position, connLineThick / camera.zoom, BLACK);
   for (size_t i = 0; i < context->GetNodeCount(); i++) {
-    Vec2D position = context->Nodes.at(i).position;
-    switch (context->Nodes.at(i).type) {
-    case NODE_FREE:
-      break;
-    case NODE_JOINT:
-      DrawLineV({position.x(), position.y() + 20 / camera.zoom},
-                {position.x(), position.y() - 20 / camera.zoom}, BLACK);
-      break;
-    case NODE_ARTICULATION:
-      DrawTriangleLines(
-          position,
-          {position.x() + 5 / camera.zoom, position.y() - 10 / camera.zoom},
-          {position.x() - 5 / camera.zoom, position.y() - 10 / camera.zoom},
-          BLACK);
-      DrawLineV(
-          {position.x() + 10 / camera.zoom, position.y() - 10 / camera.zoom},
-          {position.x() - 10 / camera.zoom, position.y() - 10 / camera.zoom},
-          BLACK);
-      break;
-    case NODE_BEARING:
-      DrawTriangleLines(
-          position,
-          {position.x() + 5 / camera.zoom, position.y() - 10 / camera.zoom},
-          {position.x() - 5 / camera.zoom, position.y() - 10 / camera.zoom},
-          BLACK);
-      DrawLineV(
-          {position.x() + 10 / camera.zoom, position.y() - 10 / camera.zoom},
-          {position.x() - 10 / camera.zoom, position.y() - 10 / camera.zoom},
-          BLACK);
-      DrawLineV(
-          {position.x() + 10 / camera.zoom, position.y() - 15 / camera.zoom},
-          {position.x() - 10 / camera.zoom, position.y() - 15 / camera.zoom},
-          BLACK);
-      break;
-    }
-    DrawCircleV(context->Nodes.at(i).position, 4.0f / camera.zoom, IsNodeHovered(i, 6.0f) ? GRAY : BLACK);
-
-    if (selectionNodesIndex[0] != -1 && (editorMode == MODE_ADDLINE || editorMode == MODE_DELLINE)) {
-      DrawCircleV(context->Nodes.at(selectionNodesIndex[0]).position, 4.0 / camera.zoom, BLUE);
-      DrawLineV(context->Nodes.at(selectionNodesIndex[0]).position, GetScreenToWorld2D(GetMousePosition(), camera), BLUE);
-    } else if (selectionNodesIndex[0] != -1)
-      DrawCircleV(context->Nodes.at(selectionNodesIndex[0]).position, 4.0 / camera.zoom, GREEN);
+    Node node = context->Nodes.at(i);
+    DrawNode(node, camera.zoom / 1.5f, detailLineThick, BLACK);
+    DrawVector(node.cForce, node.position, 0.5f, forceLineThick / camera.zoom, BLUE);
+    DrawMoment(node.cMoment, node.position, 2.0f, momentLineThick / camera.zoom, BLUE);
+    DrawVector(node.rForce, node.position, 0.5f, forceLineThick / camera.zoom, PURPLE);
+    DrawMoment(node.rMoment, node.position, 2.0f, momentLineThick / camera.zoom, PURPLE);
+    DrawCircleV(node.position, nodeRadius / camera.zoom, IsNodeHovered(i, nodeRadius) ? GRAY : BLACK);
   }
+  if (selectionNodesIndex[0] != -1 && (editorMode == MODE_ADDLINE || editorMode == MODE_DELLINE)) {
+    DrawCircleV(context->Nodes.at(selectionNodesIndex[0]).position, nodeRadius / camera.zoom, BLUE);
+    DrawLineEx(context->Nodes.at(selectionNodesIndex[0]).position, GetScreenToWorld2D(GetMousePosition(), camera), connLineThick / camera.zoom, BLUE);
+  } else if (selectionNodesIndex[0] != -1)
+    DrawCircleV(context->Nodes.at(selectionNodesIndex[0]).position, nodeRadius / camera.zoom, GREEN);
   EndMode2D();
 }
 
@@ -321,8 +299,8 @@ int Editor::GetHoveredNode(float radius) {
 
 void Editor::RenderGUI(void) {
   DrawRectangle(0, 0, GetScreenWidth(), guiHeight, LIGHTGRAY);
-  DrawTextEx(font, "Nodes", {4.0f, 4.0f}, 16.0f, 2.0f, BLACK);
-  DrawTextEx(font, "Connections", {72.0f, 4.0f}, 16.0f, 2.0f, BLACK);
+  DrawTextEx(font, "Nodes", {nodeRadius, nodeRadius}, 16.0f, 2.0f, BLACK);
+  DrawTextEx(font, "Connections", {72.0f, nodeRadius}, 16.0f, 2.0f, BLACK);
   addNodeButton.Render();
   addLineButton.Render();
   deleteLineButton.Render();
