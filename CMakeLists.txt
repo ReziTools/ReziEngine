@@ -2,10 +2,11 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(ReziEngine VERSION 0.5.0)
 
+include(FetchContent)
+
 set(RAYLIB_VERSION 5.0)
 find_package(raylib ${RAYLIB_VERSION} QUIET)
 if (NOT raylib_FOUND)
-  include(FetchContent)
   FetchContent_Declare(
     raylib
     DOWNLOAD_EXTRACT_TIMESTAMP OFF
@@ -20,17 +21,19 @@ if (NOT raylib_FOUND)
   endif()
 endif()
 
-set(EIGEN3_VERSION 3.4.0)
-find_package(Eigen3 ${EIGEN3_VERSION} QUIET)
-if(NOT Eigen3_FOUND)
-  include(FetchContent)
-  FetchContent_Declare(
-    eigen
-    GIT_REPOSITORY      https://gitlab.com/libeigen/eigen.git
-    GIT_TAG             ${EIGEN3_VERSION}
-  )
-  FetchContent_MakeAvailable(eigen)
+set(EIGEN_VERSION 3.4.0)
+FetchContent_Declare(
+  eigen
+  GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
+  GIT_TAG        ${EIGEN_VERSION}
+)
+FetchContent_GetProperties(eigen)
+if(NOT eigen_POPULATED)
+  FetchContent_Populate(eigen)
+  add_library(Eigen3 INTERFACE)
+  target_include_directories(Eigen3 INTERFACE ${eigen_SOURCE_DIR})
 endif()
+add_library(Eigen3::Eigen ALIAS Eigen3)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
