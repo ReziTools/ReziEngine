@@ -12,7 +12,7 @@
 - [Eigen](https://gitlab.com/libeigen/eigen/-/releases/3.4.0) 3.4.0
 - [CMake](https://cmake.org/download/) 3.29.1 + Ninja
 
-## Build steps:
+## Build steps (native application):
 
 1. Clone using git or download from the releases section:
 ```bash
@@ -33,4 +33,25 @@ cmake --build build
 ./build/ReziEdit/ReziEdit.exe # On Windows using MSYS2
 ```
 
+## Build steps (web application):
+Building for web is currently only supported on Linux systems, you may use WSL on Windows.
+1. Clone using git or download from the releases section:
+```bash
+git clone https://github.com/impact112/ReziEngine
+```
+2. Navigate into the project directory:
+```bash
+cd ReziEngine
+```
+3. Ensure emsdk is installed and active:
+```bash
+emsdk update
+emsdk install latest
+emsdk activate latest
+```
+4. Build the program using CMake:
+```bash
+emcmake cmake -S . -B build_web -DPLATFORM=Web -G "Ninja"
+cmake --build build
+```
 

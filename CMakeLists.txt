@@ -43,6 +43,11 @@ add_subdirectory(ReziEdit)
 set_property(TARGET ReziEdit PROPERTY CXX_STANDARD 17)
 set_property(TARGET ReziEdit PROPERTY CXX_STANDARD_REQUIRED ON)
 
+if (EMSCRIPTEN)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY -s GL_ENABLE_GET_PROC_ADDRESS=1")
+    set(CMAKE_EXECUTABLE_SUFFIX ".html")
+endif ()
+
 if (APPLE)
     target_link_libraries(ReziEngine "-framework IOKit")
     target_link_libraries(ReziEngine "-framework Cocoa")
