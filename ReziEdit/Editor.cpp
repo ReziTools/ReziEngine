@@ -3,8 +3,23 @@
 #include "gui/Utils.hpp"
 #include <iostream>
 
+Editor *Editor::instance = nullptr;
+
 Editor::Editor(int width, int height, bool fullscreen, std::string title) : width(width), height(height), fullscreen(fullscreen), title(title) {
   context = nullptr;
+}
+
+Editor &Editor::GetInstance(int width, int height, int fullscreen, const char *title) {
+  if (!instance) {
+    instance = new Editor(width, height, fullscreen, title);
+  }
+  return *instance;
+}
+
+Editor &Editor::GetInstance(void) {
+  if (!instance)
+    throw std::runtime_error("Instance not created!");
+  return *instance;
 }
 
 Editor::~Editor(void) {
@@ -26,16 +41,23 @@ void Editor::Start(void) {
   Awake();
   if (fullscreen)
     ToggleFullscreen();
+#if defined(PLATFORM_WEB)
+#else
   while (!WindowShouldClose()) {
-    Update();
-    BeginDrawing();
-    ClearBackground(BLACK);
-    Render();
-    RenderGUI();
-    if (editorMode == MODE_PAN && selectionNodesIndex[0] != -1)
-      RenderNodeProps();
-    EndDrawing();
+    Loop();
   }
+#endif
+}
+
+void Editor::Loop(void) {
+  Update();
+  BeginDrawing();
+  ClearBackground(BLACK);
+  Render();
+  RenderGUI();
+  if (editorMode == MODE_PAN && selectionNodesIndex[0] != -1)
+    RenderNodeProps();
+  EndDrawing();
 }
 
 void Editor::Awake(void) {
@@ -293,11 +315,11 @@ void Editor::Render(void) {
         DrawLineEx(context->Nodes.at(i).position, context->Nodes.at(j).position, connLineThick / camera.zoom, BLACK);
   for (size_t i = 0; i < context->GetNodeCount(); i++) {
     const Node &node = context->Nodes.at(i);
-    DrawNode(node, camera.zoom / 1.5f, detailLineThick, BLACK);
     DrawVector(node.cForce, node.position, 0.5f, forceLineThick / camera.zoom, BLUE);
     DrawMoment(node.cMoment, node.position, 2.0f, momentLineThick / camera.zoom, BLUE);
     DrawVector(node.rForce, node.position, 0.5f, forceLineThick / camera.zoom, PURPLE);
     DrawMoment(node.rMoment, node.position, 2.0f, momentLineThick / camera.zoom, PURPLE);
+    DrawNode(node, camera.zoom / 1.5f, detailLineThick, BLACK);
     DrawCircleV(node.position, nodeRadius / camera.zoom, IsNodeHovered(i, nodeRadius) ? GRAY : BLACK);
   }
   if (selectionNodesIndex[0] != -1 && (editorMode == MODE_ADDLINE || editorMode == MODE_DELLINE)) {
@@ -308,7 +330,7 @@ void Editor::Render(void) {
   EndMode2D();
   for (size_t i = 0; i < context->GetNodeCount(); i++) {
     const Node &node = context->Nodes.at(i);
-    DrawTextEx(font, TextFormat("(%llu)", i + 1), (Vector2){GetWorldToScreen2D(node.position, camera).x, GetWorldToScreen2D(node.position, camera).y + 20.0f}, 16.0f, 2.0f, BLACK);
+    DrawTextEx(font, TextFormat("(%lu)", i + 1), (Vector2){GetWorldToScreen2D(node.position, camera).x, GetWorldToScreen2D(node.position, camera).y + 20.0f}, 16.0f, 2.0f, BLACK);
   }
 }
 

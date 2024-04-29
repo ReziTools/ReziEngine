@@ -52,6 +52,6 @@ emsdk activate latest
 4. Build the program using CMake:
 ```bash
 emcmake cmake -S . -B build_web -DPLATFORM=Web -G "Ninja"
-cmake --build build
+cmake --build build_web
 ```
 

@@ -1,8 +1,13 @@
 
 cmake_minimum_required(VERSION 3.5.0)
-project(ReziEngine VERSION 0.6.2)
+project(ReziEngine VERSION 0.6.3)
 
 include(FetchContent)
+
+if (EMSCRIPTEN)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s GL_ENABLE_GET_PROC_ADDRESS=1 -fwasm-exceptions")
+    set(CMAKE_EXECUTABLE_SUFFIX ".html")
+endif ()
 
 set(RAYLIB_VERSION 5.0)
 find_package(raylib ${RAYLIB_VERSION} QUIET)
@@ -42,11 +47,6 @@ add_subdirectory(ReziEdit)
 
 set_property(TARGET ReziEdit PROPERTY CXX_STANDARD 17)
 set_property(TARGET ReziEdit PROPERTY CXX_STANDARD_REQUIRED ON)
-
-if (EMSCRIPTEN)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY -s GL_ENABLE_GET_PROC_ADDRESS=1")
-    set(CMAKE_EXECUTABLE_SUFFIX ".html")
-endif ()
 
 if (APPLE)
     target_link_libraries(ReziEngine "-framework IOKit")

@@ -15,10 +15,12 @@ enum EditorMode {
 
 class Editor {
 public:
-  Editor(int width, int height, bool fullscreen, std::string title);
+  static Editor &GetInstance(int width, int height, int fullscreen, const char *title);
+  static Editor &GetInstance(void);
   void UseContext(ReziContext *_context);
   void Awake(void);
   void Start(void);
+  void Loop(void);
   void Update(void);
   void Render(void);
   void RenderGUI(void);
@@ -29,6 +31,8 @@ public:
   ~Editor(void);
 
 private:
+  static Editor *instance;
+  Editor(int width, int height, bool fullscreen, std::string title);
   ReziContext *context;
   Font font;
   float nodeRadius, detailLineThick, connLineThick, forceLineThick, momentLineThick;
