@@ -5,7 +5,7 @@
 # Building instructions
 
 ## Dependencies:
-- C++ compatibile cu compiler - Clang/GCC
+- C++ compiler compatible with ISO C++17 - Clang/GCC (MSVC not supported)
 - POSIX subsystem - MSYS2+MinGW (Windows only)
 - [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) - Optional for web support
 - [Raylib](https://github.com/raysan5/raylib/releases/tag/5.0) 5.0
@@ -52,6 +52,6 @@ emsdk activate latest
 4. Build the program using CMake:
 ```bash
 emcmake cmake -S . -B build_web -DPLATFORM=Web -G "Ninja"
-cmake --build build_web
+cmake --build build
 ```
 

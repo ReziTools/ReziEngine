@@ -2,6 +2,10 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(ReziEngine VERSION 0.6.3)
 
+if(MSVC)
+    message(FATAL_ERROR "MSVC is unsupported.")
+endif()
+
 include(FetchContent)
 
 if (EMSCRIPTEN)
