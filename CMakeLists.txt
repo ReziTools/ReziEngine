@@ -1,6 +1,6 @@
 
 cmake_minimum_required(VERSION 3.5.0)
-project(ReziEngine VERSION 0.6.1)
+project(ReziEngine VERSION 0.6.2)
 
 include(FetchContent)
 

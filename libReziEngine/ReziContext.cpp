@@ -19,19 +19,14 @@ void ReziContext::DeleteNode(size_t index) {
 }
 
 void ReziContext::SaveReziCode(const std::filesystem::path path) const {
-  if (!GetNodeCount()) {
-    std::cerr << "Context has no nodes!\n";
-    return;
-  }
+  if (!GetNodeCount())
+    throw std::invalid_argument("Context has no nodes.");
   std::ofstream fout(path.string());
-  if (!fout.is_open()) {
-    std::cerr << path.string() << " is not writable!\n";
-    return;
-  }
-  std::cout << path.string();
+  if (!fout.is_open())
+    throw std::invalid_argument("File is not writable!");
   for (size_t i = 0; i < GetNodeCount(); i++) {
     const Node &node = Nodes.at(i);
-    fout << "node[" << i + 1 << " " << (int)node.type
+    fout << "node[" << i + 1 << "," << NodeTypeNamesRezi.at(node.type)
          << "]: " << node.position.x() << " " << node.position.y() << "\n";
   }
   for (size_t i = 0; i < GetNodeCount(); i++) {
@@ -44,12 +39,12 @@ void ReziContext::SaveReziCode(const std::filesystem::path path) const {
   }
   for (size_t i = 0; i < GetNodeCount(); i++) {
     const Node &node = Nodes.at(i);
-    if (node.cForce.norm() < LOW_CUTOFF)
+    if (node.cForce.norm() > LOW_CUTOFF)
       fout << "cforce[" << i + 1 << "]: " << node.cForce.x() << " " << node.cForce.y() << "\n";
   }
   for (size_t i = 0; i < GetNodeCount(); i++) {
     const Node &node = Nodes.at(i);
-    if (node.cMoment < LOW_CUTOFF)
+    if (node.cMoment > LOW_CUTOFF)
       fout << "cmoment[" << i + 1 << "]: " << node.cMoment << "\n";
   }
   fout.close();

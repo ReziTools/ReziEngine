@@ -1,6 +1,7 @@
 #include "Editor.hpp"
 #include "ReziSolver.hpp"
 #include "gui/Utils.hpp"
+#include <iostream>
 
 Editor::Editor(int width, int height, bool fullscreen, std::string title) : width(width), height(height), fullscreen(fullscreen), title(title) {
   context = nullptr;
@@ -115,6 +116,7 @@ void Editor::Awake(void) {
   editorMode = MODE_PAN;
   selectionNodesIndex[0] = -1;
   selectionNodesIndex[1] = -1;
+  err_msg.clear();
 }
 
 void Editor::Update(void) {
@@ -145,13 +147,24 @@ void Editor::Update(void) {
   if (deleteLineButton.IsClicked(MOUSE_BUTTON_LEFT)) {
     editorMode = MODE_DELLINE;
   }
+  try {
+    if (IsKeyPressed(KEY_S) && IsKeyDown(KEY_LEFT_CONTROL)) {
+      err_msg.clear();
+      context->SaveReziCode("out.rezi");
+      status_msg = "Saved to out.rezi.";
+    }
 
-  if (IsKeyPressed(KEY_S) && IsKeyDown(KEY_LEFT_CONTROL))
-    context->SaveReziCode("out.rezi");
+    if (IsKeyPressed(KEY_T)) {
+      err_msg.clear();
+      ReziSolver::SolveT(*context);
+      status_msg = "Solved system for T.";
+    }
 
-  if (IsKeyPressed(KEY_T))
-    ReziSolver::SolveT(*context);
-
+  } catch (const std::invalid_argument &err) {
+    status_msg.clear();
+    err_msg = err.what();
+    std::cerr << err_msg << '\n';
+  }
   if (IsKeyPressed(KEY_ESCAPE)) {
     editorMode = MODE_PAN;
     selectionNodesIndex[0] = -1;
@@ -252,9 +265,14 @@ void Editor::Update(void) {
 }
 
 void Editor::RenderDebugInfo(void) {
-  DrawTextEx(font,
-             TextFormat("FPS: %d\nNodeCount: %d\nHoveredNode: %d\nEditorMode: %d\nCamera: x:%.2f y:%.2f zoom:%.2f\nMouse: x:%.2f y:%.2f", GetFPS(), context->GetNodeCount(), GetHoveredNode(nodeRadius), editorMode, camera.target.x, camera.target.y, camera.zoom, GetScreenToWorld2D(GetMousePosition(), camera).x, GetScreenToWorld2D(GetMousePosition(), camera).y),
-             {4.0f, guiHeight + 5.0f}, 16.0f, 2.0f, LIME);
+  if (GetHoveredNode(nodeRadius) != -1)
+    DrawTextEx(font,
+               TextFormat("FPS: %d\nNodeCount: %d\nHovered Node: %d\nEditor Mode: %d\nCamera: x:%.2f y:%.2f zoom:%.2f\nMouse: x:%.2f y:%.2f", GetFPS(), context->GetNodeCount(), GetHoveredNode(nodeRadius) + 1, editorMode, camera.target.x, camera.target.y, camera.zoom, GetScreenToWorld2D(GetMousePosition(), camera).x, GetScreenToWorld2D(GetMousePosition(), camera).y),
+               {4.0f, guiHeight + 5.0f}, 16.0f, 2.0f, LIME);
+  else
+    DrawTextEx(font,
+               TextFormat("FPS: %d\nNodeCount: %d\nHovered Node: none\nEditor Mode: %d\nCamera: x:%.2f y:%.2f zoom:%.2f\nMouse: x:%.2f y:%.2f", GetFPS(), context->GetNodeCount(), editorMode, camera.target.x, camera.target.y, camera.zoom, GetScreenToWorld2D(GetMousePosition(), camera).x, GetScreenToWorld2D(GetMousePosition(), camera).y),
+               {4.0f, guiHeight + 5.0f}, 16.0f, 2.0f, LIME);
 }
 
 void RenderGrid(float interval) {
@@ -274,7 +292,7 @@ void Editor::Render(void) {
       if (context->Connections.at(i).at(j))
         DrawLineEx(context->Nodes.at(i).position, context->Nodes.at(j).position, connLineThick / camera.zoom, BLACK);
   for (size_t i = 0; i < context->GetNodeCount(); i++) {
-    Node node = context->Nodes.at(i);
+    const Node &node = context->Nodes.at(i);
     DrawNode(node, camera.zoom / 1.5f, detailLineThick, BLACK);
     DrawVector(node.cForce, node.position, 0.5f, forceLineThick / camera.zoom, BLUE);
     DrawMoment(node.cMoment, node.position, 2.0f, momentLineThick / camera.zoom, BLUE);
@@ -288,6 +306,10 @@ void Editor::Render(void) {
   } else if (selectionNodesIndex[0] != -1)
     DrawCircleV(context->Nodes.at(selectionNodesIndex[0]).position, nodeRadius / camera.zoom, GREEN);
   EndMode2D();
+  for (size_t i = 0; i < context->GetNodeCount(); i++) {
+    const Node &node = context->Nodes.at(i);
+    DrawTextEx(font, TextFormat("(%llu)", i + 1), (Vector2){GetWorldToScreen2D(node.position, camera).x, GetWorldToScreen2D(node.position, camera).y + 20.0f}, 16.0f, 2.0f, BLACK);
+  }
 }
 
 bool Editor::IsNodeHovered(size_t index, float radius) {
@@ -302,6 +324,11 @@ int Editor::GetHoveredNode(float radius) {
 }
 
 void Editor::RenderGUI(void) {
+  if (err_msg.length()) {
+    DrawTextEx(font, err_msg.c_str(), {5.0f, GetScreenHeight() - 21.0f}, 16.0f, 2.0f, RED);
+  } else if (status_msg.length()) {
+    DrawTextEx(font, status_msg.c_str(), {5.0f, GetScreenHeight() - 21.0f}, 16.0f, 2.0f, GREEN);
+  }
   DrawRectangle(0, 0, GetScreenWidth(), guiHeight, LIGHTGRAY);
   DrawTextEx(font, "Nodes", {nodeRadius, nodeRadius}, 16.0f, 2.0f, BLACK);
   DrawTextEx(font, "Connections", {72.0f, nodeRadius}, 16.0f, 2.0f, BLACK);
@@ -313,7 +340,7 @@ void Editor::RenderGUI(void) {
 
 void Editor::RenderNodeProps(void) {
   DrawRectangle(236, 0, 6000, guiHeight, GRAY);
-  DrawTextEx(font, TextFormat("Node (%d) properties:", selectionNodesIndex[0]), {240.0f, 4.0f}, 16.0f, 2.0f, BLACK);
+  DrawTextEx(font, TextFormat("Node (%lu) properties:", selectionNodesIndex[0] + 1), {240.0f, 4.0f}, 16.0f, 2.0f, BLACK);
   DrawTextEx(font, "Type:", {240.0f, 20.0f}, 16.0f, 2.0f, BLACK);
   DrawTextEx(font, "X:", {240.0f, 36.0f}, 16.0f, 2.0f, BLACK);
   DrawTextEx(font, "Y:", {240.0f, 52.0f}, 16.0f, 2.0f, BLACK);

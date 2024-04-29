@@ -1,28 +1,27 @@
 #include "ReziSolver.hpp"
 #include <Eigen/Dense>
-#include <iostream>
+#include <stdexcept>
 
 void ReziSolver::SolveT(ReziContext &context) {
-  if (!context.GetNodeCount()) {
-    std::cerr << "Context has no nodes!\n";
-    return;
-  }
-  if (!CheckContextDFS(context)) {
-    std::cerr << "Graph is not connected!\n";
-    return;
-  }
-  if (!CheckContextAlignY(context)) {
-    std::cerr << "Nodes are unaligned on Y axis!\n";
-    return;
-  }
+  if (context.GetNodeCount() <= 1)
+    throw std::invalid_argument("Context has insufficient nodes.");
+  if (!CheckContextDFS(context))
+    throw std::invalid_argument("Graph is not connected.");
+  if (!CheckContextAlignY(context))
+    throw std::invalid_argument("Nodes are unaligned on Y axis.");
+  if (!GetContextMomentMatrixCount(context))
+    throw std::invalid_argument("Moment equations cannot be generated.");
+  Eigen::MatrixXf momentMatrix(GetContextMomentMatrixCount(context) + 1, GetContextMomentMatrixCount(context));
+  Eigen::VectorXf reactionVector(GetContextMomentMatrixCount(context));
+  Eigen::VectorXf cMomentVector(GetContextMomentMatrixCount(context));
   for (Node &node : context.Nodes) {
     switch (node.type) {
     case NODE_JOINT:
-      node.rForce = {1.0f, 1.0f};
+      node.rForce = {0.0f, 1.0f};
       node.rMoment = 1.0f;
       break;
     case NODE_ARTICULATION:
-      node.rForce = {1.0f, 1.0f};
+      node.rForce = {0.0f, 1.0f};
       node.rMoment = 0.0f;
       break;
     case NODE_BEARING:
@@ -69,4 +68,13 @@ bool CheckContextAlignY(const ReziContext &context) {
       return false;
   }
   return true;
+}
+
+size_t GetContextMomentMatrixCount(const ReziContext &context) {
+  size_t eq_cnt = 0;
+  for (const Node &node : context.Nodes) {
+    if (node.type != NODE_FREE)
+      eq_cnt++;
+  }
+  return eq_cnt;
 }

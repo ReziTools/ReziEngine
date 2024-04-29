@@ -11,3 +11,4 @@ void DFS(const size_t node_index, const std::vector<std::vector<T>> &graph, std:
 bool CheckContextDFS(const ReziContext &context);
 bool CheckContextAlignX(const ReziContext &context);
 bool CheckContextAlignY(const ReziContext &context);
+size_t GetContextMomentMatrixCount(const ReziContext &context);

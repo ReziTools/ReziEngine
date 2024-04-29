@@ -32,6 +32,7 @@ private:
   ReziContext *context;
   Font font;
   float nodeRadius, detailLineThick, connLineThick, forceLineThick, momentLineThick;
+  std::string err_msg, status_msg;
   float guiHeight;
   Camera2D camera;
   TextBox<float> coordsBoxX, coordsBoxY, forceBoxX, forceBoxY, momentBox;

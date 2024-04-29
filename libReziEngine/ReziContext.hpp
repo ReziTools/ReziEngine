@@ -20,6 +20,12 @@ const std::map<NodeType, std::string> NodeTypeNames = {
     {NodeType::NODE_ARTICULATION, "Articulation"},
     {NodeType::NODE_BEARING, "Bearing"}};
 
+const std::map<NodeType, std::string> NodeTypeNamesRezi = {
+    {NodeType::NODE_FREE, "free"},
+    {NodeType::NODE_JOINT, "join"},
+    {NodeType::NODE_ARTICULATION, "arti"},
+    {NodeType::NODE_BEARING, "bear"}};
+
 struct Node {
   NodeType type;
   Vec2D position;
