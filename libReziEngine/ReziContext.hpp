@@ -1,9 +1,11 @@
 #pragma once
 #include "Vec2D.hpp"
-#include <iostream>
+#include <filesystem>
 #include <map>
 #include <string>
 #include <vector>
+
+#define LOW_CUTOFF 0.0001f
 
 enum NodeType {
   NODE_FREE = 0,
@@ -33,5 +35,5 @@ struct ReziContext {
   size_t GetNodeCount(void) const;
   void AddNode(Node node);
   void DeleteNode(size_t index);
-  void EmitReziCode(void) const;
+  void SaveReziCode(const std::filesystem::path path) const;
 };

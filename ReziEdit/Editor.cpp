@@ -1,4 +1,6 @@
 #include "Editor.hpp"
+#include "ReziSolver.hpp"
+#include "gui/Utils.hpp"
 
 Editor::Editor(int width, int height, bool fullscreen, std::string title) : width(width), height(height), fullscreen(fullscreen), title(title) {
   context = nullptr;
@@ -137,17 +139,19 @@ void Editor::Update(void) {
   if (addNodeButton.IsClicked(MOUSE_BUTTON_LEFT)) {
     editorMode = MODE_ADDNODE;
   }
-
   if (addLineButton.IsClicked(MOUSE_BUTTON_LEFT)) {
     editorMode = MODE_ADDLINE;
   }
   if (deleteLineButton.IsClicked(MOUSE_BUTTON_LEFT)) {
     editorMode = MODE_DELLINE;
   }
-  if (IsKeyPressed(KEY_E))
-    context->EmitReziCode();
-  if (IsKeyPressed(KEY_S))
-    ReziSolver::FakeSolver(*context);
+
+  if (IsKeyPressed(KEY_S) && IsKeyDown(KEY_LEFT_CONTROL))
+    context->SaveReziCode("out.rezi");
+
+  if (IsKeyPressed(KEY_T))
+    ReziSolver::SolveT(*context);
+
   if (IsKeyPressed(KEY_ESCAPE)) {
     editorMode = MODE_PAN;
     selectionNodesIndex[0] = -1;

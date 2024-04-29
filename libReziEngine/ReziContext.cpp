@@ -1,4 +1,6 @@
 #include "ReziContext.hpp"
+#include <fstream>
+#include <iostream>
 
 size_t ReziContext::GetNodeCount(void) const { return Nodes.size(); }
 
@@ -16,26 +18,39 @@ void ReziContext::DeleteNode(size_t index) {
     row.erase(row.begin() + index);
 }
 
-void ReziContext::EmitReziCode(void) const {
+void ReziContext::SaveReziCode(const std::filesystem::path path) const {
+  if (!GetNodeCount()) {
+    std::cerr << "Context has no nodes!\n";
+    return;
+  }
+  std::ofstream fout(path.string());
+  if (!fout.is_open()) {
+    std::cerr << path.string() << " is not writable!\n";
+    return;
+  }
+  std::cout << path.string();
   for (size_t i = 0; i < GetNodeCount(); i++) {
     const Node &node = Nodes.at(i);
-    std::cout << "node[" << i << " " << (int)node.type
-              << "]: " << node.position.x() << " " << node.position.y() << "\n";
+    fout << "node[" << i + 1 << " " << (int)node.type
+         << "]: " << node.position.x() << " " << node.position.y() << "\n";
   }
   for (size_t i = 0; i < GetNodeCount(); i++) {
-    std::cout << "conn[" << i << "]: ";
+    fout << "conn[" << i + 1 << "]: ";
     for (size_t j = 0; j < GetNodeCount(); j++) {
       if (Connections.at(i).at(j))
-        std::cout << j << " ";
+        fout << j + 1 << " ";
     }
-    std::cout << "\n";
+    fout << "\n";
   }
   for (size_t i = 0; i < GetNodeCount(); i++) {
     const Node &node = Nodes.at(i);
-    std::cout << "cforce[" << i << "]: " << node.cForce.x() << " " << node.cForce.y() << "\n";
+    if (node.cForce.norm() < LOW_CUTOFF)
+      fout << "cforce[" << i + 1 << "]: " << node.cForce.x() << " " << node.cForce.y() << "\n";
   }
   for (size_t i = 0; i < GetNodeCount(); i++) {
     const Node &node = Nodes.at(i);
-    std::cout << "cmoment[" << i << "]: " << node.cMoment << "\n";
+    if (node.cMoment < LOW_CUTOFF)
+      fout << "cmoment[" << i + 1 << "]: " << node.cMoment << "\n";
   }
+  fout.close();
 }

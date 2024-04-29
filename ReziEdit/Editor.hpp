@@ -1,9 +1,7 @@
 #pragma once
 #include "ReziContext.hpp"
-#include "ReziSolver.hpp"
 #include "gui/Button.hpp"
 #include "gui/TextBox.hpp"
-#include "gui/Utils.hpp"
 #include <raylib.h>
 #include <raymath.h>
 #include <rlgl.h>

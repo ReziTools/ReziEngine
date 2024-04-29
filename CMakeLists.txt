@@ -1,6 +1,6 @@
 
 cmake_minimum_required(VERSION 3.5.0)
-project(ReziEngine VERSION 0.6.0)
+project(ReziEngine VERSION 0.6.1)
 
 include(FetchContent)
 
@@ -40,7 +40,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_subdirectory(libReziEngine)
 add_subdirectory(ReziEdit)
 
-set_property(TARGET ReziEdit PROPERTY CXX_STANDARD 11)
+set_property(TARGET ReziEdit PROPERTY CXX_STANDARD 17)
 set_property(TARGET ReziEdit PROPERTY CXX_STANDARD_REQUIRED ON)
 
 if (APPLE)

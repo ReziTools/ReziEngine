@@ -9,7 +9,6 @@
 - [x] Stergere noduri
 - [x] Modificare pozitie noduri
 - [x] Modificare tip noduri
-- [ ] Modificare parametrica distante/unghiuri
 - [ ] Hasuri incastrari/reazeme
 
 ### Grafice

@@ -1,7 +1,13 @@
 #pragma once
 #include "ReziContext.hpp"
-#include <Eigen/Dense>
 
 namespace ReziSolver {
-void FakeSolver(ReziContext &context);
+void SolveT(ReziContext &context);
 }
+
+template <typename T>
+void DFS(const size_t node_index, const std::vector<std::vector<T>> &graph, std::vector<bool> &visited);
+
+bool CheckContextDFS(const ReziContext &context);
+bool CheckContextAlignX(const ReziContext &context);
+bool CheckContextAlignY(const ReziContext &context);
