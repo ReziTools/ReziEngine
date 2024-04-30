@@ -1,16 +1,24 @@
 #include "ReziSolver.hpp"
 #include <Eigen/Dense>
-#include <stdexcept>
 
-void ReziSolver::SolveT(ReziContext &context) {
-  if (context.GetNodeCount() <= 1)
-    throw std::invalid_argument("Context has insufficient nodes.");
-  if (!CheckContextDFS(context))
-    throw std::invalid_argument("Graph is not connected.");
-  if (!CheckContextAlignY(context))
-    throw std::invalid_argument("Nodes are unaligned on Y axis.");
-  if (!GetContextMomentMatrixCount(context))
-    throw std::invalid_argument("Moment equations cannot be generated.");
+void ReziSolver::SolveT(ReziContext &context, std::string &err) {
+  err.clear();
+  if (context.GetNodeCount() <= 1) {
+    err = "Context has insufficient nodes.";
+    return;
+  }
+  if (!CheckContextDFS(context)) {
+    err = "Graph is not connected.";
+    return;
+  }
+  if (!CheckContextAlignY(context)) {
+    err = "Nodes are unaligned on Y axis.";
+    return;
+  }
+  if (!GetContextMomentMatrixCount(context)) {
+    err = "Moment equations cannot be generated.";
+    return;
+  }
   Eigen::MatrixXf momentMatrix(GetContextMomentMatrixCount(context) + 1, GetContextMomentMatrixCount(context));
   Eigen::VectorXf reactionVector(GetContextMomentMatrixCount(context));
   Eigen::VectorXf cMomentVector(GetContextMomentMatrixCount(context));

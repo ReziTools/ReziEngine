@@ -1,6 +1,6 @@
 
 cmake_minimum_required(VERSION 3.5.0)
-project(ReziEngine VERSION 0.6.3)
+project(ReziEngine VERSION 0.6.4)
 
 if(MSVC)
     message(FATAL_ERROR "MSVC is unsupported.")
@@ -8,9 +8,24 @@ endif()
 
 include(FetchContent)
 
+if(NOT PLATFORM)
+  set(PLATFORM Desktop)
+endif()
+
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
+add_compile_options(-Wall -Wextra)
+
 if (EMSCRIPTEN)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s GL_ENABLE_GET_PROC_ADDRESS=1 -fwasm-exceptions")
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
+endif ()
+
+if ("${PLATFORM}" STREQUAL "Desktop")
+    set(GRAPHICS "GRAPHICS_OPENGL_43")
+    add_compile_options(-O2)
 endif ()
 
 set(RAYLIB_VERSION 5.0)

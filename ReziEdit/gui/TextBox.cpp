@@ -1,4 +1,5 @@
 #include "TextBox.hpp"
+#include <sstream>
 
 template <typename T>
 void TextBox<T>::Render(void) const {
@@ -53,27 +54,20 @@ bool TextBox<T>::IsClicked(int button) const {
   return IsHovered() && IsMouseButtonDown(button);
 }
 
+template <typename T>
+void TextBox<T>::UpdateTarget(void) {
+  if (data.empty())
+    return;
+  std::istringstream iss(data);
+  T temp = 0;
+  if (!(iss >> temp))
+    return;
+  *target = temp;
+}
+
 template <>
 void TextBox<std::string>::UpdateTarget(void) {
   *target = data;
-}
-
-template <>
-void TextBox<float>::UpdateTarget(void) {
-  try {
-    *target = std::stof(data);
-  } catch (const std::invalid_argument &e) {
-    return;
-  }
-}
-
-template <>
-void TextBox<double>::UpdateTarget(void) {
-  try {
-    *target = std::stod(data);
-  } catch (const std::invalid_argument &e) {
-    return;
-  }
 }
 
 template class TextBox<std::string>;

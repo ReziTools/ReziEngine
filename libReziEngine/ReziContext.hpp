@@ -41,5 +41,5 @@ struct ReziContext {
   size_t GetNodeCount(void) const;
   void AddNode(Node node);
   void DeleteNode(size_t index);
-  void SaveReziCode(const std::filesystem::path path) const;
+  void SaveReziCode(const std::filesystem::path path, std::string &err) const;
 };

@@ -23,8 +23,7 @@ int main(int argc, char **argv) {
     }
   }
   ReziContext mainContext;
-  Editor &editor = Editor::GetInstance(width, height, fullscreen, "ReziEdit v0.6.3");
-  editor.UseContext(&mainContext);
+  Editor &editor = Editor::GetInstance(width, height, fullscreen, "ReziEdit v0.6.4", mainContext);
   editor.Start();
 #if defined(PLATFORM_WEB)
   emscripten_set_main_loop(EditorLoop, 0, 1);

@@ -24,7 +24,7 @@ cd ReziEngine
 ```
 3. Build the program using CMake:
 ```bash
-cmake -B build -G "Ninja"
+cmake -S . -B build -G "Ninja"
 cmake --build build
 ```
 4. The executable will be in the build/ReziEdit directory and will be named ReziEdit(.exe)

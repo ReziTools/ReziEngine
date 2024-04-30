@@ -8,7 +8,7 @@ void DrawTriangleLinesEx(Vector2 v1, Vector2 v2, Vector2 v3, float thick, Color 
 
 void DrawJoint(Vec2D position, float scale, float thick, Color color) {
   DrawLineEx({position.x(), position.y() + 20 / scale},
-             {position.x(), position.y() - 20 / scale}, thick / scale, BLACK);
+             {position.x(), position.y() - 20 / scale}, thick / scale, color);
 }
 
 void DrawArticulation(Vec2D position, float scale, float thick, Color color) {
@@ -16,11 +16,11 @@ void DrawArticulation(Vec2D position, float scale, float thick, Color color) {
       position,
       {position.x() + 5 / scale, position.y() - 10 / scale},
       {position.x() - 5 / scale, position.y() - 10 / scale},
-      thick / scale, BLACK);
+      thick / scale, color);
   DrawLineEx(
       {position.x() + 10 / scale, position.y() - 10 / scale},
       {position.x() - 10 / scale, position.y() - 10 / scale},
-      thick / scale, BLACK);
+      thick / scale, color);
 }
 
 void DrawBearing(Vec2D position, float scale, float thick, Color color) {
@@ -28,15 +28,15 @@ void DrawBearing(Vec2D position, float scale, float thick, Color color) {
       position,
       {position.x() + 5 / scale, position.y() - 10 / scale},
       {position.x() - 5 / scale, position.y() - 10 / scale},
-      thick / scale, BLACK);
+      thick / scale, color);
   DrawLineEx(
       {position.x() + 10 / scale, position.y() - 10 / scale},
       {position.x() - 10 / scale, position.y() - 10 / scale},
-      thick / scale, BLACK);
+      thick / scale, color);
   DrawLineEx(
       {position.x() + 10 / scale, position.y() - 15 / scale},
       {position.x() - 10 / scale, position.y() - 15 / scale},
-      thick / scale, BLACK);
+      thick / scale, color);
 }
 
 void DrawNode(Node node, float scale, float thick, Color color) {

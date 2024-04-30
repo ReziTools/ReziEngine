@@ -18,12 +18,17 @@ void ReziContext::DeleteNode(size_t index) {
     row.erase(row.begin() + index);
 }
 
-void ReziContext::SaveReziCode(const std::filesystem::path path) const {
-  if (!GetNodeCount())
-    throw std::invalid_argument("Context has no nodes.");
+void ReziContext::SaveReziCode(const std::filesystem::path path, std::string &err) const {
+  err.clear();
+  if (!GetNodeCount()) {
+    err = "Context has no nodes.";
+    return;
+  }
   std::ofstream fout(path.string());
-  if (!fout.is_open())
-    throw std::invalid_argument("File is not writable!");
+  if (!fout.is_open()) {
+    err = "File is not writable!";
+    return;
+  }
   for (size_t i = 0; i < GetNodeCount(); i++) {
     const Node &node = Nodes.at(i);
     fout << "node[" << i + 1 << "," << NodeTypeNamesRezi.at(node.type)

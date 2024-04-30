@@ -1,17 +1,15 @@
 #include "Editor.hpp"
 #include "ReziSolver.hpp"
 #include "gui/Utils.hpp"
-#include <iostream>
 
 Editor *Editor::instance = nullptr;
 
-Editor::Editor(int width, int height, bool fullscreen, std::string title) : width(width), height(height), fullscreen(fullscreen), title(title) {
-  context = nullptr;
+Editor::Editor(int width, int height, bool fullscreen, std::string title, ReziContext &context) : width(width), height(height), fullscreen(fullscreen), title(title), context(context) {
 }
 
-Editor &Editor::GetInstance(int width, int height, int fullscreen, const char *title) {
+Editor &Editor::GetInstance(int width, int height, int fullscreen, std::string title, ReziContext &context) {
   if (!instance) {
-    instance = new Editor(width, height, fullscreen, title);
+    instance = new Editor(width, height, fullscreen, title, context);
   }
   return *instance;
 }
@@ -27,13 +25,7 @@ Editor::~Editor(void) {
   CloseWindow();
 }
 
-void Editor::UseContext(ReziContext *_context) {
-  context = _context;
-}
-
 void Editor::Start(void) {
-  if (context == nullptr)
-    throw std::runtime_error("Context not provided, exiting.");
   SetConfigFlags(FLAG_MSAA_4X_HINT);
   InitWindow(width, height, title.c_str());
   SetWindowState(FLAG_WINDOW_RESIZABLE);
@@ -169,23 +161,14 @@ void Editor::Update(void) {
   if (deleteLineButton.IsClicked(MOUSE_BUTTON_LEFT)) {
     editorMode = MODE_DELLINE;
   }
-  try {
-    if (IsKeyPressed(KEY_S) && IsKeyDown(KEY_LEFT_CONTROL)) {
-      err_msg.clear();
-      context->SaveReziCode("out.rezi");
-      status_msg = "Saved to out.rezi.";
-    }
+  if (IsKeyPressed(KEY_S) && IsKeyDown(KEY_LEFT_CONTROL)) {
+    context.SaveReziCode("out.rezi", err_msg);
+    status_msg = "Saved to out.rezi.";
+  }
 
-    if (IsKeyPressed(KEY_T)) {
-      err_msg.clear();
-      ReziSolver::SolveT(*context);
-      status_msg = "Solved system for T.";
-    }
-
-  } catch (const std::invalid_argument &err) {
-    status_msg.clear();
-    err_msg = err.what();
-    std::cerr << err_msg << '\n';
+  if (IsKeyPressed(KEY_T)) {
+    ReziSolver::SolveT(context, err_msg);
+    status_msg = "Solved system for T.";
   }
   if (IsKeyPressed(KEY_ESCAPE)) {
     editorMode = MODE_PAN;
@@ -197,26 +180,28 @@ void Editor::Update(void) {
       if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         if (GetHoveredNode(nodeRadius) != -1) {
           selectionNodesIndex[0] = GetHoveredNode(nodeRadius);
-          coordsBoxX.target = &context->Nodes.at(selectionNodesIndex[0]).position.x();
-          coordsBoxY.target = &context->Nodes.at(selectionNodesIndex[0]).position.y();
-          forceBoxX.target = &context->Nodes.at(selectionNodesIndex[0]).cForce.x();
-          forceBoxY.target = &context->Nodes.at(selectionNodesIndex[0]).cForce.y();
-          momentBox.target = &context->Nodes.at(selectionNodesIndex[0]).cMoment;
-          nodeTypeButton.label = NodeTypeNames.at(context->Nodes.at(selectionNodesIndex[0]).type);
+          coordsBoxX.target = &context.Nodes.at(selectionNodesIndex[0]).position.x();
+          coordsBoxY.target = &context.Nodes.at(selectionNodesIndex[0]).position.y();
+          forceBoxX.target = &context.Nodes.at(selectionNodesIndex[0]).cForce.x();
+          forceBoxY.target = &context.Nodes.at(selectionNodesIndex[0]).cForce.y();
+          momentBox.target = &context.Nodes.at(selectionNodesIndex[0]).cMoment;
+          nodeTypeButton.label = NodeTypeNames.at(context.Nodes.at(selectionNodesIndex[0]).type);
         } else
           selectionNodesIndex[0] = -1;
       } else if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
         if (GetHoveredNode(nodeRadius * 2.0f) != -1)
-          context->Nodes.at(GetHoveredNode(nodeRadius * 2.0f)).position = Vec2D(GetScreenToWorld2D(GetMousePosition(), camera));
+          context.Nodes.at(GetHoveredNode(nodeRadius * 2.0f)).position = Vec2D(GetScreenToWorld2D(GetMousePosition(), camera));
       }
       break;
     }
     case MODE_ADDNODE: {
       if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && GetHoveredNode(nodeRadius) == -1) {
-        context->AddNode({.type = NODE_FREE,
-                          .position = Vec2D(GetScreenToWorld2D(GetMousePosition(), camera)),
-                          .cForce = {0.0f, 0.0f},
-                          .cMoment = 0.0f});
+        context.AddNode({.type = NODE_FREE,
+                         .position = Vec2D(GetScreenToWorld2D(GetMousePosition(), camera)),
+                         .cForce = {0.0f, 0.0f},
+                         .cMoment = 0.0f,
+                         .rForce = {0.0f, 0.0f},
+                         .rMoment = 0.0f});
       }
       break;
     }
@@ -229,8 +214,8 @@ void Editor::Update(void) {
         selectionNodesIndex[0] = -1;
         selectionNodesIndex[1] = -1;
       } else if (selectionNodesIndex[0] != -1 && selectionNodesIndex[1] != -1) {
-        context->Connections.at(selectionNodesIndex[0]).at(selectionNodesIndex[1]) = 1;
-        context->Connections.at(selectionNodesIndex[1]).at(selectionNodesIndex[0]) = 1;
+        context.Connections.at(selectionNodesIndex[0]).at(selectionNodesIndex[1]) = 1;
+        context.Connections.at(selectionNodesIndex[1]).at(selectionNodesIndex[0]) = 1;
         selectionNodesIndex[0] = -1;
         selectionNodesIndex[1] = -1;
       }
@@ -245,8 +230,8 @@ void Editor::Update(void) {
         selectionNodesIndex[0] = -1;
         selectionNodesIndex[1] = -1;
       } else if (selectionNodesIndex[0] != -1 && selectionNodesIndex[1] != -1) {
-        context->Connections.at(selectionNodesIndex[0]).at(selectionNodesIndex[1]) = 0;
-        context->Connections.at(selectionNodesIndex[1]).at(selectionNodesIndex[0]) = 0;
+        context.Connections.at(selectionNodesIndex[0]).at(selectionNodesIndex[1]) = 0;
+        context.Connections.at(selectionNodesIndex[1]).at(selectionNodesIndex[0]) = 0;
         selectionNodesIndex[0] = -1;
         selectionNodesIndex[1] = -1;
       }
@@ -262,25 +247,25 @@ void Editor::Update(void) {
     momentBox.Update();
     if (GetMouseY() < guiHeight) {
       if (nodeTypeButton.IsClicked(MOUSE_BUTTON_LEFT)) {
-        switch (context->Nodes.at(selectionNodesIndex[0]).type) {
+        switch (context.Nodes.at(selectionNodesIndex[0]).type) {
         case NODE_FREE:
-          context->Nodes.at(selectionNodesIndex[0]).type = NODE_JOINT;
+          context.Nodes.at(selectionNodesIndex[0]).type = NODE_JOINT;
           break;
         case NODE_JOINT:
-          context->Nodes.at(selectionNodesIndex[0]).type = NODE_ARTICULATION;
+          context.Nodes.at(selectionNodesIndex[0]).type = NODE_ARTICULATION;
           break;
         case NODE_ARTICULATION:
-          context->Nodes.at(selectionNodesIndex[0]).type = NODE_BEARING;
+          context.Nodes.at(selectionNodesIndex[0]).type = NODE_BEARING;
           break;
         case NODE_BEARING:
-          context->Nodes.at(selectionNodesIndex[0]).type = NODE_FREE;
+          context.Nodes.at(selectionNodesIndex[0]).type = NODE_FREE;
           break;
         }
-        nodeTypeButton.label = NodeTypeNames.at(context->Nodes.at(selectionNodesIndex[0]).type);
+        nodeTypeButton.label = NodeTypeNames.at(context.Nodes.at(selectionNodesIndex[0]).type);
       }
     }
     if (deleteNodeButton.IsClicked(MOUSE_BUTTON_LEFT)) {
-      context->DeleteNode(selectionNodesIndex[0]);
+      context.DeleteNode(selectionNodesIndex[0]);
       selectionNodesIndex[0] = -1;
     }
   }
@@ -289,11 +274,11 @@ void Editor::Update(void) {
 void Editor::RenderDebugInfo(void) {
   if (GetHoveredNode(nodeRadius) != -1)
     DrawTextEx(font,
-               TextFormat("FPS: %d\nNodeCount: %d\nHovered Node: %d\nEditor Mode: %d\nCamera: x:%.2f y:%.2f zoom:%.2f\nMouse: x:%.2f y:%.2f", GetFPS(), context->GetNodeCount(), GetHoveredNode(nodeRadius) + 1, editorMode, camera.target.x, camera.target.y, camera.zoom, GetScreenToWorld2D(GetMousePosition(), camera).x, GetScreenToWorld2D(GetMousePosition(), camera).y),
+               TextFormat("FPS: %d\nNodeCount: %d\nHovered Node: %d\nEditor Mode: %d\nCamera: x:%.2f y:%.2f zoom:%.2f\nMouse: x:%.2f y:%.2f", GetFPS(), context.GetNodeCount(), GetHoveredNode(nodeRadius) + 1, editorMode, camera.target.x, camera.target.y, camera.zoom, GetScreenToWorld2D(GetMousePosition(), camera).x, GetScreenToWorld2D(GetMousePosition(), camera).y),
                {4.0f, guiHeight + 5.0f}, 16.0f, 2.0f, LIME);
   else
     DrawTextEx(font,
-               TextFormat("FPS: %d\nNodeCount: %d\nHovered Node: none\nEditor Mode: %d\nCamera: x:%.2f y:%.2f zoom:%.2f\nMouse: x:%.2f y:%.2f", GetFPS(), context->GetNodeCount(), editorMode, camera.target.x, camera.target.y, camera.zoom, GetScreenToWorld2D(GetMousePosition(), camera).x, GetScreenToWorld2D(GetMousePosition(), camera).y),
+               TextFormat("FPS: %d\nNodeCount: %d\nHovered Node: none\nEditor Mode: %d\nCamera: x:%.2f y:%.2f zoom:%.2f\nMouse: x:%.2f y:%.2f", GetFPS(), context.GetNodeCount(), editorMode, camera.target.x, camera.target.y, camera.zoom, GetScreenToWorld2D(GetMousePosition(), camera).x, GetScreenToWorld2D(GetMousePosition(), camera).y),
                {4.0f, guiHeight + 5.0f}, 16.0f, 2.0f, LIME);
 }
 
@@ -309,12 +294,12 @@ void Editor::Render(void) {
   ClearBackground(WHITE);
   BeginMode2D(camera);
   RenderGrid(1.0f);
-  for (size_t i = 0; i < context->GetNodeCount(); i++)
-    for (size_t j = i + 1; j < context->GetNodeCount(); j++)
-      if (context->Connections.at(i).at(j))
-        DrawLineEx(context->Nodes.at(i).position, context->Nodes.at(j).position, connLineThick / camera.zoom, BLACK);
-  for (size_t i = 0; i < context->GetNodeCount(); i++) {
-    const Node &node = context->Nodes.at(i);
+  for (size_t i = 0; i < context.GetNodeCount(); i++)
+    for (size_t j = i + 1; j < context.GetNodeCount(); j++)
+      if (context.Connections.at(i).at(j))
+        DrawLineEx(context.Nodes.at(i).position, context.Nodes.at(j).position, connLineThick / camera.zoom, BLACK);
+  for (size_t i = 0; i < context.GetNodeCount(); i++) {
+    const Node &node = context.Nodes.at(i);
     DrawVector(node.cForce, node.position, 0.5f, forceLineThick / camera.zoom, BLUE);
     DrawMoment(node.cMoment, node.position, 2.0f, momentLineThick / camera.zoom, BLUE);
     DrawVector(node.rForce, node.position, 0.5f, forceLineThick / camera.zoom, PURPLE);
@@ -323,23 +308,23 @@ void Editor::Render(void) {
     DrawCircleV(node.position, nodeRadius / camera.zoom, IsNodeHovered(i, nodeRadius) ? GRAY : BLACK);
   }
   if (selectionNodesIndex[0] != -1 && (editorMode == MODE_ADDLINE || editorMode == MODE_DELLINE)) {
-    DrawCircleV(context->Nodes.at(selectionNodesIndex[0]).position, nodeRadius / camera.zoom, BLUE);
-    DrawLineEx(context->Nodes.at(selectionNodesIndex[0]).position, GetScreenToWorld2D(GetMousePosition(), camera), connLineThick / camera.zoom, BLUE);
+    DrawCircleV(context.Nodes.at(selectionNodesIndex[0]).position, nodeRadius / camera.zoom, BLUE);
+    DrawLineEx(context.Nodes.at(selectionNodesIndex[0]).position, GetScreenToWorld2D(GetMousePosition(), camera), connLineThick / camera.zoom, BLUE);
   } else if (selectionNodesIndex[0] != -1)
-    DrawCircleV(context->Nodes.at(selectionNodesIndex[0]).position, nodeRadius / camera.zoom, GREEN);
+    DrawCircleV(context.Nodes.at(selectionNodesIndex[0]).position, nodeRadius / camera.zoom, GREEN);
   EndMode2D();
-  for (size_t i = 0; i < context->GetNodeCount(); i++) {
-    const Node &node = context->Nodes.at(i);
+  for (size_t i = 0; i < context.GetNodeCount(); i++) {
+    const Node &node = context.Nodes.at(i);
     DrawTextEx(font, TextFormat("(%lu)", i + 1), (Vector2){GetWorldToScreen2D(node.position, camera).x, GetWorldToScreen2D(node.position, camera).y + 20.0f}, 16.0f, 2.0f, BLACK);
   }
 }
 
 bool Editor::IsNodeHovered(size_t index, float radius) {
-  return ((Vec2D)GetWorldToScreen2D(context->Nodes.at(index).position, camera) - (Vec2D)GetMousePosition()).norm() < radius;
+  return ((Vec2D)GetWorldToScreen2D(context.Nodes.at(index).position, camera) - (Vec2D)GetMousePosition()).norm() < radius;
 }
 
 int Editor::GetHoveredNode(float radius) {
-  for (size_t i = 0; i < context->Nodes.size(); i++)
+  for (size_t i = 0; i < context.Nodes.size(); i++)
     if (IsNodeHovered(i, radius))
       return i;
   return -1;

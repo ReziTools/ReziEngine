@@ -2,7 +2,7 @@
 #include "ReziContext.hpp"
 
 namespace ReziSolver {
-void SolveT(ReziContext &context);
+void SolveT(ReziContext &context, std::string &err);
 }
 
 template <typename T>
