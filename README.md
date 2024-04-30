@@ -13,7 +13,9 @@
 - [CMake](https://cmake.org/download/) 3.29.1 + Ninja
 
 ## Build steps (native application):
-
+The following steps are for Linux/FreeBSD/macOS.
+If building on Windows make sure you are in a MinGW environment like MSYS2 MINGW64 and follow the same steps.
+Clang, CMake and Ninja must be installed on your system.
 1. Clone using git or download from the releases section:
 ```bash
 git clone https://github.com/impact112/ReziEngine
