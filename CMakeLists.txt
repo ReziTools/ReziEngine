@@ -1,6 +1,5 @@
-
 cmake_minimum_required(VERSION 3.5.0)
-project(ReziEngine VERSION 0.6.4)
+project(ReziEngine VERSION 0.6.5)
 
 if(MSVC)
     message(FATAL_ERROR "MSVC is unsupported.")
@@ -63,6 +62,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(libReziEngine)
 add_subdirectory(ReziEdit)
+add_subdirectory(ReziCLI)
 
 set_property(TARGET ReziEdit PROPERTY CXX_STANDARD 17)
 set_property(TARGET ReziEdit PROPERTY CXX_STANDARD_REQUIRED ON)

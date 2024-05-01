@@ -1,5 +1,6 @@
 #include "ReziSolver.hpp"
 #include <Eigen/Dense>
+#include <iostream>
 
 void ReziSolver::SolveT(ReziContext &context, std::string &err) {
   err.clear();
@@ -25,11 +26,11 @@ void ReziSolver::SolveT(ReziContext &context, std::string &err) {
   for (Node &node : context.Nodes) {
     switch (node.type) {
     case NODE_JOINT:
-      node.rForce = {0.0f, 1.0f};
+      node.rForce = {1.0f, 1.0f};
       node.rMoment = 1.0f;
       break;
     case NODE_ARTICULATION:
-      node.rForce = {0.0f, 1.0f};
+      node.rForce = {1.0f, 1.0f};
       node.rMoment = 0.0f;
       break;
     case NODE_BEARING:
@@ -39,6 +40,52 @@ void ReziSolver::SolveT(ReziContext &context, std::string &err) {
     case NODE_FREE:
       break;
     }
+  }
+
+  std::cout << "SFx: ";
+  float cFxSum = 0.0f;
+  for (size_t i = 0; i < context.GetNodeCount(); i++) {
+    const Node &node = context.Nodes.at(i);
+    if (node.type == NODE_JOINT || node.type == NODE_ARTICULATION) {
+      std::cout << "+H" << i + 1;
+    }
+    cFxSum -= node.cForce.x();
+  }
+  std::cout << "=" << cFxSum << '\n';
+
+  std::cout << "SFy: ";
+  float cFySum = 0.0f;
+  for (size_t i = 0; i < context.GetNodeCount(); i++) {
+    const Node &node = context.Nodes.at(i);
+    if (node.type != NODE_FREE) {
+      std::cout << "+V" << i + 1;
+    }
+    cFySum -= node.cForce.y();
+  }
+  std::cout << "=" << cFySum << '\n';
+
+  for (size_t i = 0; i < context.GetNodeCount(); i++) {
+    const Node &node = context.Nodes.at(i);
+    if (node.type == NODE_FREE)
+      continue;
+    std::cout << "SM" << i + 1 << ": ";
+    // sum of all Reaction*Distance
+    for (size_t j = 0; j < context.GetNodeCount(); j++) {
+      const Node &node2 = context.Nodes.at(j);
+      if (node2.type == NODE_FREE)
+        continue;
+      std::cout << "+V" << j + 1 << "*" << (node.position - node2.position).norm();
+    }
+    std::cout << '=';
+    // sum of all Concentrated*Distance
+    for (size_t j = 0; j < context.GetNodeCount(); j++) {
+      const Node &node2 = context.Nodes.at(j);
+      if (node2.cForce.y() > LOW_CUTOFF)
+        std::cout << '-' << node2.cForce.y() << '*' << (node.position - node2.position).norm();
+      /*if(node.cMoment > LOW_CUTOFF)
+        std::cout << '+' << node2.cMoment;*/
+    }
+    std::cout << '\n';
   }
 }
 
