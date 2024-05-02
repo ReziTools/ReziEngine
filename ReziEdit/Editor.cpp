@@ -161,6 +161,7 @@ void Editor::Update(void) {
   if (deleteLineButton.IsClicked(MOUSE_BUTTON_LEFT)) {
     editorMode = MODE_DELLINE;
   }
+#ifndef PLATFORM_WEB
   if (IsKeyPressed(KEY_S) && IsKeyDown(KEY_LEFT_CONTROL)) {
     context.SaveToml("out.toml", err_msg);
     status_msg = "Saved to out.toml.";
@@ -170,7 +171,7 @@ void Editor::Update(void) {
     context.LoadToml("out.toml", err_msg);
     status_msg = "Loaded out.toml.";
   }
-
+#endif
   if (IsKeyPressed(KEY_T)) {
     ReziSolver::SolveT(context, err_msg);
     status_msg = "Solved system for T.";

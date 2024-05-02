@@ -3,7 +3,7 @@
 #include "Version.hpp"
 #include <cstring>
 
-#if defined(PLATFORM_WEB)
+#ifdef PLATFORM_WEB
 #include <emscripten/emscripten.h>
 void EditorLoop(void) {
   Editor::GetInstance().Loop();
@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
   ReziContext mainContext;
   Editor &editor = Editor::GetInstance(width, height, fullscreen, "ReziEdit " VERSION_STRING, mainContext);
   editor.Start();
-#if defined(PLATFORM_WEB)
+#ifdef PLATFORM_WEB
   emscripten_set_main_loop(EditorLoop, 0, 1);
 #endif
   return 0;
