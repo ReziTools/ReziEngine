@@ -71,7 +71,7 @@ void Editor::Awake(void) {
   nodeTypeButton = {
       .position = {290.0f, 20.0f},
       .size = {90.0f, 16.0f},
-      .label = NodeTypeNames.at(NODE_FREE),
+      .label = getNodeTypeName(NODE_FREE),
       .normalColor = WHITE,
       .hoverColor = WHITE,
       .clickColor = WHITE};
@@ -162,8 +162,7 @@ void Editor::Update(void) {
     editorMode = MODE_DELLINE;
   }
   if (IsKeyPressed(KEY_S) && IsKeyDown(KEY_LEFT_CONTROL)) {
-    context.SaveReziCode("out.rezi", err_msg);
-    status_msg = "Saved to out.rezi.";
+    status_msg = "Saved to out.toml.";
   }
 
   if (IsKeyPressed(KEY_T)) {
@@ -185,7 +184,7 @@ void Editor::Update(void) {
           forceBoxX.target = &context.Nodes.at(selectionNodesIndex[0]).cForce.x();
           forceBoxY.target = &context.Nodes.at(selectionNodesIndex[0]).cForce.y();
           momentBox.target = &context.Nodes.at(selectionNodesIndex[0]).cMoment;
-          nodeTypeButton.label = NodeTypeNames.at(context.Nodes.at(selectionNodesIndex[0]).type);
+          nodeTypeButton.label = getNodeTypeName(context.Nodes.at(selectionNodesIndex[0]).type);
         } else
           selectionNodesIndex[0] = -1;
       } else if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
@@ -261,7 +260,7 @@ void Editor::Update(void) {
           context.Nodes.at(selectionNodesIndex[0]).type = NODE_FREE;
           break;
         }
-        nodeTypeButton.label = NodeTypeNames.at(context.Nodes.at(selectionNodesIndex[0]).type);
+        nodeTypeButton.label = getNodeTypeName(context.Nodes.at(selectionNodesIndex[0]).type);
       }
     }
     if (deleteNodeButton.IsClicked(MOUSE_BUTTON_LEFT)) {

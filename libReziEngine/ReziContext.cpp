@@ -1,8 +1,31 @@
 #include "ReziContext.hpp"
 #include <fstream>
 #include <iostream>
+#include <toml.hpp>
+
+std::string getNodeTypeName(NodeType type) {
+  switch (type) {
+  case NodeType::NODE_JOINT:
+    return "joint";
+  case NodeType::NODE_ARTICULATION:
+    return "articulation";
+  case NodeType::NODE_BEARING:
+    return "bearing";
+  case NodeType::NODE_FREE:
+    return "free";
+  }
+}
 
 size_t ReziContext::GetNodeCount(void) const { return Nodes.size(); }
+
+void ReziContext::Resize(size_t size) {
+  if (size < GetNodeCount())
+    return;
+  Nodes.resize(size);
+  Connections.resize(size);
+  for (std::vector<size_t> &row : Connections)
+    row.resize(size);
+}
 
 void ReziContext::AddNode(Node node) {
   Nodes.push_back(node);
@@ -18,39 +41,8 @@ void ReziContext::DeleteNode(size_t index) {
     row.erase(row.begin() + index);
 }
 
-void ReziContext::SaveReziCode(const std::filesystem::path path, std::string &err) const {
-  err.clear();
-  if (!GetNodeCount()) {
-    err = "Context has no nodes.";
-    return;
-  }
-  std::ofstream fout(path.string());
-  if (!fout.is_open()) {
-    err = "File is not writable!";
-    return;
-  }
-  for (size_t i = 0; i < GetNodeCount(); i++) {
-    const Node &node = Nodes.at(i);
-    fout << "node[" << i + 1 << "," << NodeTypeNamesRezi.at(node.type)
-         << "]: " << node.position.x() << " " << node.position.y() << "\n";
-  }
-  for (size_t i = 0; i < GetNodeCount(); i++) {
-    fout << "conn[" << i + 1 << "]: ";
-    for (size_t j = 0; j < GetNodeCount(); j++) {
-      if (Connections.at(i).at(j))
-        fout << j + 1 << " ";
-    }
-    fout << "\n";
-  }
-  for (size_t i = 0; i < GetNodeCount(); i++) {
-    const Node &node = Nodes.at(i);
-    if (node.cForce.norm() > LOW_CUTOFF)
-      fout << "cforce[" << i + 1 << "]: " << node.cForce.x() << " " << node.cForce.y() << "\n";
-  }
-  for (size_t i = 0; i < GetNodeCount(); i++) {
-    const Node &node = Nodes.at(i);
-    if (node.cMoment > LOW_CUTOFF)
-      fout << "cmoment[" << i + 1 << "]: " << node.cMoment << "\n";
-  }
-  fout.close();
+void ReziContext::SaveToml(const std::string path, std::string &err) const {
+}
+
+void ReziContext::LoadToml(const std::string path, std::string &err) {
 }

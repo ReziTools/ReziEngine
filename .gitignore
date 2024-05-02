@@ -1,7 +1,6 @@
 /build/
 /build_web/
 /.cache/
-*.rezi
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles

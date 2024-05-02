@@ -1,7 +1,5 @@
 #pragma once
 #include "Vec2D.hpp"
-#include <filesystem>
-#include <map>
 #include <string>
 #include <vector>
 
@@ -14,32 +12,24 @@ enum NodeType {
   NODE_BEARING
 };
 
-const std::map<NodeType, std::string> NodeTypeNames = {
-    {NodeType::NODE_FREE, "Free"},
-    {NodeType::NODE_JOINT, "Joint"},
-    {NodeType::NODE_ARTICULATION, "Articulation"},
-    {NodeType::NODE_BEARING, "Bearing"}};
-
-const std::map<NodeType, std::string> NodeTypeNamesRezi = {
-    {NodeType::NODE_FREE, "free"},
-    {NodeType::NODE_JOINT, "join"},
-    {NodeType::NODE_ARTICULATION, "arti"},
-    {NodeType::NODE_BEARING, "bear"}};
+std::string getNodeTypeName(NodeType type);
 
 struct Node {
-  NodeType type;
-  Vec2D position;
-  Vec2D cForce;
-  float cMoment;
-  Vec2D rForce;
-  float rMoment;
+  NodeType type = NodeType::NODE_FREE;
+  Vec2D position = {0.0f, 0.0f};
+  Vec2D cForce = {0.0f, 0.0f};
+  float cMoment = 0.0f;
+  Vec2D rForce = {0.0f, 0.0f};
+  float rMoment = 0.0f;
 };
 
 struct ReziContext {
   std::vector<Node> Nodes;
   std::vector<std::vector<size_t>> Connections;
   size_t GetNodeCount(void) const;
+  void Resize(size_t size);
   void AddNode(Node node);
   void DeleteNode(size_t index);
-  void SaveReziCode(const std::filesystem::path path, std::string &err) const;
+  void SaveToml(const std::string path, std::string &err) const;
+  void LoadToml(const std::string path, std::string &err);
 };

@@ -20,27 +20,14 @@ void ReziSolver::SolveT(ReziContext &context, std::string &err) {
     err = "Moment equations cannot be generated.";
     return;
   }
+  for (Node &node : context.Nodes)
+    if (node.type == NODE_JOINT) {
+      err = "Joints are not allowed for T.";
+      return;
+    }
   Eigen::MatrixXf momentMatrix(GetContextMomentMatrixCount(context) + 1, GetContextMomentMatrixCount(context));
   Eigen::VectorXf reactionVector(GetContextMomentMatrixCount(context));
   Eigen::VectorXf cMomentVector(GetContextMomentMatrixCount(context));
-  for (Node &node : context.Nodes) {
-    switch (node.type) {
-    case NODE_JOINT:
-      node.rForce = {1.0f, 1.0f};
-      node.rMoment = 1.0f;
-      break;
-    case NODE_ARTICULATION:
-      node.rForce = {1.0f, 1.0f};
-      node.rMoment = 0.0f;
-      break;
-    case NODE_BEARING:
-      node.rForce = {0.0f, 1.0f};
-      node.rMoment = 0.0f;
-      break;
-    case NODE_FREE:
-      break;
-    }
-  }
 
   std::cout << "SFx: ";
   float cFxSum = 0.0f;

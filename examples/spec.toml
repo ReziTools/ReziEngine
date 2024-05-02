@@ -1,0 +1,23 @@
+[[node]]
+index = 1
+type = "free"
+x = 2.0
+y = 0.0
+cforceY = 2.0
+connections = [2]
+
+[[node]]
+index = 2
+type = "bearing"
+x = 1.0
+y = 0.0
+connections = [1,3]
+
+[[node]]
+index = 3
+type = "articulation"
+x = 0.0
+y = 0.0
+connections = [2]
+
+solver = "T"

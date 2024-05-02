@@ -64,7 +64,7 @@ void DrawVector(Vec2D vec, Vec2D position, float scale, float thick, Color color
 void DrawMoment(float moment, Vec2D position, float scale, float thick, Color color) {
   if (abs(moment) < 0.001f)
     return;
-  if (moment > 0.0f)
+  if (moment > 0.001f)
     DrawCircleSectorLines(position, moment / scale, 0.0f, 270.0f, 32, color);
   else
     DrawCircleSectorLines(position, -moment / scale, 270.0f, 0.0f, 32, color);

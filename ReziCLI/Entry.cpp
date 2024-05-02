@@ -2,35 +2,31 @@
 #include "ReziSolver.hpp"
 #include "Version.hpp"
 #include <iostream>
+#include <fstream>
 #include <string>
 
 int main(int argc, char **argv) {
   std::string err_msg;
+  std::string rezicode_path, rawcode;
   std::cout << "ReziCLI " VERSION_STRING "\n";
-  ReziContext mainContext;
-  mainContext.AddNode({NODE_FREE,
-                       {2.0f, 0.0f},
-                       {0.0f, 2.0f},
-                       0.0f,
-                       {0.0f, 0.0f},
-                       0.0f});
-  mainContext.AddNode({NODE_BEARING,
-                       {1.0f, 0.0f},
-                       {0.0f, 0.0f},
-                       0.0f,
-                       {0.0f, 0.0f},
-                       0.0f});
-  mainContext.AddNode({NODE_ARTICULATION,
-                       {0.0f, 0.0f},
-                       {0.0f, 0.0f},
-                       0.0f,
-                       {0.0f, 0.0f},
-                       0.0f});
-  mainContext.Connections = {
-      {0, 1, 0},
-      {1, 0, 1},
-      {0, 1, 0}};
-  ReziSolver::SolveT(mainContext, err_msg);
+
+  if(argc < 2){
+    err_msg = "No REZI file provided.";
+  }
+
+  std::ifstream fin(argv[1]);
+  if(!fin.is_open())
+    err_msg = "File couldn't be opened.";
+
+  std::stringstream buffer;
+  buffer << fin.rdbuf();
+  rawcode = buffer.str();
+
+  std::cout << rawcode << '\n';
+
+  if(err_msg.empty()){
+  }
+
   if (!err_msg.empty()) {
     std::cerr << err_msg << '\n';
     return -1;

@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.5.0)
-project(ReziEngine VERSION 0.6.5)
+project(ReziEngine VERSION 0.7.0)
+
+set(CXX_STANDARD 11)
+set(CXX_STANDARD_REQUIRED ON)
 
 if(MSVC)
     message(FATAL_ERROR "MSVC is unsupported.")
@@ -58,14 +61,27 @@ if(NOT eigen_POPULATED)
 endif()
 add_library(Eigen3::Eigen ALIAS Eigen3)
 
+set(TOML11_VERSION 3.8.1)
+FetchContent_Declare(
+  toml11
+  GIT_REPOSITORY https://github.com/ToruNiina/toml11.git
+  GIT_TAG        "v${TOML11_VERSION}"
+)
+FetchContent_GetProperties(toml11)
+if(NOT toml11_POPULATED)
+  FetchContent_Populate(toml11)
+  add_library(toml11 INTERFACE)
+  target_include_directories(toml11 INTERFACE ${toml11_SOURCE_DIR})
+endif()
+
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(libReziEngine)
 add_subdirectory(ReziEdit)
-add_subdirectory(ReziCLI)
-
-set_property(TARGET ReziEdit PROPERTY CXX_STANDARD 17)
-set_property(TARGET ReziEdit PROPERTY CXX_STANDARD_REQUIRED ON)
+if ("${PLATFORM}" STREQUAL "Desktop")
+  add_subdirectory(ReziCLI)
+endif()
 
 if (APPLE)
     target_link_libraries(ReziEngine "-framework IOKit")
