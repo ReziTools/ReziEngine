@@ -2,6 +2,8 @@
 ## Abordari numerice pentru ridicarea nedeterminarilor pentru diverse tipuri de solicitari
 ## Numerical approaches for resolving indeterminacies for various types of mechanical loads
 
+Try the latest web version [here](https://reziengine.github.io/latest/ReziEngine.html).
+
 # Features
 - GUI interface for editing mechanical load systems
 - TOML mechanical load system definition
