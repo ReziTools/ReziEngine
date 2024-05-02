@@ -3,6 +3,7 @@
 ## Numerical approaches for resolving indeterminacies for various types of mechanical loads
 
 Try the latest web version [here](https://reziengine.github.io/latest/ReziEdit.html).
+
 See all the previous web releases [here](https://reziengine.github.io).
 
 # Features
