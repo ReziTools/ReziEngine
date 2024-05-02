@@ -162,7 +162,13 @@ void Editor::Update(void) {
     editorMode = MODE_DELLINE;
   }
   if (IsKeyPressed(KEY_S) && IsKeyDown(KEY_LEFT_CONTROL)) {
+    context.SaveToml("out.toml", err_msg);
     status_msg = "Saved to out.toml.";
+  }
+
+  if (IsKeyPressed(KEY_L) && IsKeyDown(KEY_LEFT_CONTROL)) {
+    context.LoadToml("out.toml", err_msg);
+    status_msg = "Loaded out.toml.";
   }
 
   if (IsKeyPressed(KEY_T)) {
@@ -247,6 +253,9 @@ void Editor::Update(void) {
     if (GetMouseY() < guiHeight) {
       if (nodeTypeButton.IsClicked(MOUSE_BUTTON_LEFT)) {
         switch (context.Nodes.at(selectionNodesIndex[0]).type) {
+        case NODE_INVALID:
+          context.Nodes.at(selectionNodesIndex[0]).type = NODE_FREE;
+          break;
         case NODE_FREE:
           context.Nodes.at(selectionNodesIndex[0]).type = NODE_JOINT;
           break;
@@ -304,7 +313,8 @@ void Editor::Render(void) {
     DrawVector(node.rForce, node.position, 0.5f, forceLineThick / camera.zoom, PURPLE);
     DrawMoment(node.rMoment, node.position, 2.0f, momentLineThick / camera.zoom, PURPLE);
     DrawNode(node, camera.zoom / 1.5f, detailLineThick, BLACK);
-    DrawCircleV(node.position, nodeRadius / camera.zoom, IsNodeHovered(i, nodeRadius) ? GRAY : BLACK);
+    DrawCircleV(node.position, nodeRadius / camera.zoom, IsNodeHovered(i, nodeRadius) ? GRAY : (node.type == NodeType::NODE_INVALID) ? RED
+                                                                                                                                     : BLACK);
   }
   if (selectionNodesIndex[0] != -1 && (editorMode == MODE_ADDLINE || editorMode == MODE_DELLINE)) {
     DrawCircleV(context.Nodes.at(selectionNodesIndex[0]).position, nodeRadius / camera.zoom, BLUE);

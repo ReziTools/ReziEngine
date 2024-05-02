@@ -1,6 +1,7 @@
 /build/
 /build_web/
 /.cache/
+*.toml
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles

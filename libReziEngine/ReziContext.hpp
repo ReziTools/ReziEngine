@@ -6,7 +6,8 @@
 #define LOW_CUTOFF 0.0001f
 
 enum NodeType {
-  NODE_FREE = 0,
+  NODE_INVALID = 0,
+  NODE_FREE,
   NODE_JOINT,
   NODE_ARTICULATION,
   NODE_BEARING
@@ -15,7 +16,7 @@ enum NodeType {
 std::string getNodeTypeName(NodeType type);
 
 struct Node {
-  NodeType type = NodeType::NODE_FREE;
+  NodeType type = NodeType::NODE_INVALID;
   Vec2D position = {0.0f, 0.0f};
   Vec2D cForce = {0.0f, 0.0f};
   float cMoment = 0.0f;
@@ -30,6 +31,7 @@ struct ReziContext {
   void Resize(size_t size);
   void AddNode(Node node);
   void DeleteNode(size_t index);
+  void Clear(void);
   void SaveToml(const std::string path, std::string &err) const;
   void LoadToml(const std::string path, std::string &err);
 };

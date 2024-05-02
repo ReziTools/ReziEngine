@@ -41,6 +41,7 @@ void DrawBearing(Vec2D position, float scale, float thick, Color color) {
 
 void DrawNode(Node node, float scale, float thick, Color color) {
   switch (node.type) {
+  case NODE_INVALID:
   case NODE_FREE:
     break;
   case NODE_JOINT:

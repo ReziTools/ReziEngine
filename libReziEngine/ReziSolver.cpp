@@ -4,6 +4,16 @@
 
 void ReziSolver::SolveT(ReziContext &context, std::string &err) {
   err.clear();
+  for (Node &node : context.Nodes) {
+    if (node.type == NODE_JOINT) {
+      err = "Joints are not allowed for T.";
+      return;
+    }
+    if (node.type == NODE_INVALID) {
+      err = "Context contains invalid nodes.";
+      return;
+    }
+  }
   if (context.GetNodeCount() <= 1) {
     err = "Context has insufficient nodes.";
     return;
@@ -20,11 +30,6 @@ void ReziSolver::SolveT(ReziContext &context, std::string &err) {
     err = "Moment equations cannot be generated.";
     return;
   }
-  for (Node &node : context.Nodes)
-    if (node.type == NODE_JOINT) {
-      err = "Joints are not allowed for T.";
-      return;
-    }
   Eigen::MatrixXf momentMatrix(GetContextMomentMatrixCount(context) + 1, GetContextMomentMatrixCount(context));
   Eigen::VectorXf reactionVector(GetContextMomentMatrixCount(context));
   Eigen::VectorXf cMomentVector(GetContextMomentMatrixCount(context));
