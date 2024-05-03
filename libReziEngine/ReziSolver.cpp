@@ -65,11 +65,13 @@ void ReziSolver::SolveT(ReziContext &context, std::string &err) {
     }
   }
   indVector = distMatrix.fullPivLu().solve(concVector);
+  for (Node &node : context.Nodes) {
+    node.rForce = {0.0f, 0.0f};
+    node.rMoment = 0.0f;
+  }
   for (size_t i = 0; i < indCnt; i++) {
     indNode(i)->rForce.y() = indVector(i);
   }
-  std::cout << distMatrix << '\n'
-            << indVector << '\n';
 }
 
 template <typename T>

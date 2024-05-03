@@ -53,7 +53,7 @@ private:
   char solver;
   bool solved;
   std::vector<bool> selectedNodes;
-  Button saveButton, loadButton, lockYButton, nodeTypeButton;
+  Button addNodeButton, connectButton, disconnectButton, saveButton, loadButton, lockYButton, nodeTypeButton;
   TextBox<float> coordsBoxX, coordsBoxY, forceBoxX, forceBoxY, momentBox;
   int width, height;
   bool fullscreen;

@@ -84,6 +84,29 @@ void Editor::Awake(void) {
   lockYButton.size = {60.0f, 20.0f};
   lockYButton.position = {loadButton.size.x() + loadButton.position.x(), 0.0f};
 
+  nodeTypeButton.font = &font;
+  nodeTypeButton.size = {100.0f, 18.0f};
+  nodeTypeButton.normalColor = WHITE;
+  nodeTypeButton.CalculateTextPadding();
+
+  addNodeButton.font = &font;
+  addNodeButton.position = {5.0f, 25.0f};
+  addNodeButton.size = {190.0f, 20.0f};
+  addNodeButton.label = "Add node";
+  addNodeButton.CalculateTextPadding();
+
+  connectButton.font = &font;
+  connectButton.position = {5.0f, 50.0f};
+  connectButton.size = {190.0f, 20.0f};
+  connectButton.label = "Connect nodes";
+  connectButton.CalculateTextPadding();
+
+  disconnectButton.font = &font;
+  disconnectButton.position = {5.0f, 75.0f};
+  disconnectButton.size = {190.0f, 20.0f};
+  disconnectButton.label = "Disconnect nodes";
+  disconnectButton.CalculateTextPadding();
+
   coordsBoxX.font = &font;
   coordsBoxX.fontSize = 16.0f;
   coordsBoxX.size = {100.0f, 18.0f};
@@ -129,7 +152,7 @@ void Editor::Update(void) {
   std::vector<size_t> selNodes = GetSelectedNodeIndexes();
   guiHeight = 120.0f;
 
-  if (IsKeyPressed(KEY_N))
+  if (IsKeyPressed(KEY_N) || addNodeButton.IsClicked(MOUSE_BUTTON_LEFT))
     editorMode = EditorMode::MODE_ADD;
 
   if (IsKeyPressed(KEY_ESCAPE)) {
@@ -205,16 +228,47 @@ void Editor::Update(void) {
       }
     }
     if (selNodes.size() == 2) {
-      if (IsKeyPressed(KEY_C)) {
+      if (IsKeyPressed(KEY_C) || connectButton.IsClicked(MOUSE_BUTTON_LEFT)) {
         context.Connect(selNodes.at(0), selNodes.at(1));
         selectedNodes.assign(selectedNodes.size(), false);
       }
-      if (IsKeyPressed(KEY_D)) {
+      if (IsKeyPressed(KEY_D) || disconnectButton.IsClicked(MOUSE_BUTTON_LEFT)) {
         context.Disconnect(selNodes.at(0), selNodes.at(1));
         selectedNodes.assign(selectedNodes.size(), false);
       }
-    }
-    if (selNodes.size()) {
+    } else if (selNodes.size() == 1) {
+      Node &node = context.Nodes.at(selNodes.at(0));
+      coordsBoxX.target = &node.position.x();
+      coordsBoxY.target = &node.position.y();
+      forceBoxX.target = &node.cForce.x();
+      forceBoxY.target = &node.cForce.y();
+      momentBox.target = &node.cMoment;
+      nodeTypeButton.label = getNodeTypeName(node.type);
+      coordsBoxX.Update();
+      coordsBoxY.Update();
+      forceBoxX.Update();
+      forceBoxY.Update();
+      momentBox.Update();
+      if (nodeTypeButton.IsClicked(MOUSE_BUTTON_LEFT)) {
+        switch (node.type) {
+        case NODE_INVALID:
+          node.type = NODE_FREE;
+          break;
+        case NODE_FREE:
+          node.type = NODE_JOINT;
+          break;
+        case NODE_JOINT:
+          node.type = NODE_ARTICULATION;
+          break;
+        case NODE_ARTICULATION:
+          node.type = NODE_BEARING;
+          break;
+        case NODE_BEARING:
+          node.type = NODE_FREE;
+          break;
+        }
+      }
+    } else if (selNodes.size()) {
       if (IsKeyPressed(KEY_DELETE)) {
         size_t offset = 0;
         for (size_t i : selNodes)
@@ -224,9 +278,9 @@ void Editor::Update(void) {
     }
     break;
   case MODE_ADD:
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && GetHoveredNode(nodeRadius) == -1) {
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && GetHoveredNode(nodeRadius) == -1 && GetMouseY() > guiHeight) {
       context.AddNode({.type = NODE_FREE,
-                       .position = Vec2D(GetScreenToWorld2D(GetMousePosition(), camera).x, (lockY) ? GetScreenToWorld2D(GetMousePosition(), camera).y : 0.0f),
+                       .position = Vec2D(GetScreenToWorld2D(GetMousePosition(), camera).x, (!lockY) ? GetScreenToWorld2D(GetMousePosition(), camera).y : 0.0f),
                        .cForce = {0.0f, 0.0f},
                        .cMoment = 0.0f,
                        .rForce = {0.0f, 0.0f},
@@ -261,7 +315,7 @@ void Editor::Render(void) {
       DrawCircleV(context.Nodes.at(i).position, nodeRadius / camera.zoom, IsNodeHovered(i, nodeRadius) ? GREEN : LIME);
   }
   EndMode2D();
-  if (editorMode == MODE_ADD && GetHoveredNode(nodeRadius) == -1) {
+  if (editorMode == MODE_ADD && GetHoveredNode(nodeRadius) == -1 && GetMouseY() > guiHeight) {
     DrawCircleV(GetMousePosition(), nodeRadius, BLACK);
   }
   for (size_t i = 0; i < context.GetNodeCount(); i++) {
@@ -292,8 +346,12 @@ void Editor::RenderGUI(void) {
     DrawTextEx(font, statusMsg.c_str(), {5.0f, GetScreenHeight() - 21.0f}, 16.0f, 2.0f, GREEN);
   }
   DrawRectangleV({0.0f, 20.0f}, {(float)GetScreenWidth(), 100.0f}, LIGHTGRAY);
+  addNodeButton.Render();
   if (GetSelectedNodeIndexes().size() == 1) {
     RenderNodeProps();
+  } else if (GetSelectedNodeIndexes().size() == 2) {
+    connectButton.Render();
+    disconnectButton.Render();
   }
 }
 
@@ -317,11 +375,14 @@ void Editor::RenderNodeProps(void) {
   DrawTextEx(font, "CForce X:", {offset.x() + 200.0f, offset.y() + 21.0f}, 16.0f, 2.0f, BLACK);
   DrawTextEx(font, "CForce Y:", {offset.x() + 200.0f, offset.y() + 42.0f}, 16.0f, 2.0f, BLACK);
   DrawTextEx(font, " CMoment:", {offset.x() + 200.0f, offset.y() + 63.0f}, 16.0f, 2.0f, BLACK);
+  nodeTypeButton.position = {offset.x() + 60.0f, offset.y() + 21.0f};
   coordsBoxX.position = {offset.x() + 60.0f, offset.y() + 42.0f};
   coordsBoxY.position = {offset.x() + 60.0f, offset.y() + 63.0f};
   forceBoxX.position = {offset.x() + 300.0f, offset.y() + 21.0f};
   forceBoxY.position = {offset.x() + 300.0f, offset.y() + 42.0f};
   momentBox.position = {offset.x() + 300.0f, offset.y() + 63.0f};
+  nodeTypeButton.CalculateTextPadding();
+  nodeTypeButton.Render();
   coordsBoxX.Render();
   coordsBoxY.Render();
   forceBoxX.Render();
