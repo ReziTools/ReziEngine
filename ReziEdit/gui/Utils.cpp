@@ -57,16 +57,16 @@ void DrawNode(Node node, float scale, float thick, Color color) {
 }
 
 void DrawVector(Vec2D vec, Vec2D position, float scale, float thick, Color color) {
-  if (vec.norm() < 0.001f)
+  if (vec.norm() < 0.00001f)
     return;
   DrawLineEx(position, {position.x() + vec.x() * scale, position.y() + vec.y() * scale}, thick / scale, color);
 }
 
 void DrawMoment(float moment, Vec2D position, float scale, float thick, Color color) {
-  if (abs(moment) < 0.001f)
+  if (abs(moment) < 0.00001f)
     return;
-  if (moment > 0.001f)
-    DrawCircleSectorLines(position, moment / scale, 0.0f, 270.0f, 32, color);
+  if (moment > 0.00001f)
+    DrawCircleSectorLines(position, moment * scale, 0.0f, 270.0f, 32, color);
   else
-    DrawCircleSectorLines(position, -moment / scale, 270.0f, 0.0f, 32, color);
+    DrawCircleSectorLines(position, -moment * scale, 270.0f, 0.0f, 32, color);
 }

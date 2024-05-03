@@ -68,7 +68,7 @@ void ReziSolver::SolveT(ReziContext &context, std::string &err) {
   for (size_t i = 0; i < indCnt; i++) {
     indNode(i)->rForce.y() = indVector(i);
   }
-  std::cout << distMatrix << "\n"
+  std::cout << distMatrix << '\n'
             << indVector << '\n';
 }
 

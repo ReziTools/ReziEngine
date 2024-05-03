@@ -15,8 +15,6 @@ void Button::CalculateTextPadding(void) {
 }
 
 bool Button::IsHovered(void) const {
-  if (!active)
-    return false;
   return (GetMouseX() >= position.x() && GetMouseX() <= (position + size).x() &&
           GetMouseY() >= position.y() && GetMouseY() <= (position + size).y())
              ? true

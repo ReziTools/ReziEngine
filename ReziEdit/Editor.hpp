@@ -8,10 +8,7 @@
 
 enum EditorMode {
   MODE_FREE = 0,
-  MODE_ADD,
-  MODE_PROPS,
-  MODE_CONNECT,
-  MODE_DISCONNECT
+  MODE_ADD
 };
 
 const std::string EditorControls =
@@ -33,7 +30,6 @@ public:
   void Start(void);
   void Loop(void);
   void Update(void);
-  void UpdateGuiComponents(void);
   void Render(void);
   void RenderGUI(void);
   void RenderTopBar(void);
@@ -54,9 +50,11 @@ private:
   float guiHeight;
   Camera2D camera;
   EditorMode editorMode;
+  char solver;
+  bool solved;
   std::vector<bool> selectedNodes;
-  int ClickedNode;
-  Button saveButton, loadButton, lockYButton;
+  Button saveButton, loadButton, lockYButton, nodeTypeButton;
+  TextBox<float> coordsBoxX, coordsBoxY, forceBoxX, forceBoxY, momentBox;
   int width, height;
   bool fullscreen;
   std::string title;
