@@ -6,7 +6,7 @@ void ReziSolver::SolveT(ReziContext &context, std::string &err) {
   err.clear();
   for (Node &node : context.Nodes) {
     if (node.type == NODE_JOINT) {
-      err = "Joints are not allowed for T.";
+      err = "Joints are not allowed for T solver.";
       return;
     }
     if (node.type == NODE_INVALID) {
@@ -26,59 +26,50 @@ void ReziSolver::SolveT(ReziContext &context, std::string &err) {
     err = "Nodes are unaligned on Y axis.";
     return;
   }
-  if (!GetContextMomentMatrixCount(context)) {
+  size_t indCnt = 0;
+  for (const Node &node : context.Nodes) {
+    if (node.type != NODE_FREE)
+      indCnt++;
+  }
+  if (!indCnt) {
     err = "Moment equations cannot be generated.";
     return;
   }
-  Eigen::MatrixXf momentMatrix(GetContextMomentMatrixCount(context) + 1, GetContextMomentMatrixCount(context));
-  Eigen::VectorXf reactionVector(GetContextMomentMatrixCount(context));
-  Eigen::VectorXf cMomentVector(GetContextMomentMatrixCount(context));
-
-  std::cout << "SFx: ";
-  float cFxSum = 0.0f;
+  Eigen::MatrixXf distMatrix(indCnt, indCnt);
+  Eigen::VectorXf indVector(indCnt);
+  Eigen::VectorXf concVector(indCnt);
+  std::vector<size_t> indNodeIdxVec;
+  auto indNode = [&](size_t index) {
+    return &context.Nodes.at(indNodeIdxVec.at(index));
+  };
   for (size_t i = 0; i < context.GetNodeCount(); i++) {
-    const Node &node = context.Nodes.at(i);
-    if (node.type == NODE_JOINT || node.type == NODE_ARTICULATION) {
-      std::cout << "+H" << i + 1;
+    Node &node = context.Nodes.at(i);
+    if (node.type == NODE_BEARING || node.type == NODE_ARTICULATION) {
+      indNodeIdxVec.push_back(i);
     }
-    cFxSum -= node.cForce.x();
   }
-  std::cout << "=" << cFxSum << '\n';
 
-  std::cout << "SFy: ";
-  float cFySum = 0.0f;
-  for (size_t i = 0; i < context.GetNodeCount(); i++) {
-    const Node &node = context.Nodes.at(i);
-    if (node.type != NODE_FREE) {
-      std::cout << "+V" << i + 1;
-    }
-    cFySum -= node.cForce.y();
-  }
-  std::cout << "=" << cFySum << '\n';
+  for (size_t i = 0; i < indCnt; i++) {
+    for (size_t j = 0; j < indCnt; j++) {
+      if (i == j)
+        distMatrix(i, j) = 0.0f;
+      else
+        distMatrix(i, j) = indNode(i)->position.x() - indNode(j)->position.x();
 
-  for (size_t i = 0; i < context.GetNodeCount(); i++) {
-    const Node &node = context.Nodes.at(i);
-    if (node.type == NODE_FREE)
-      continue;
-    std::cout << "SM" << i + 1 << ": ";
-    // sum of all Reaction*Distance
-    for (size_t j = 0; j < context.GetNodeCount(); j++) {
-      const Node &node2 = context.Nodes.at(j);
-      if (node2.type == NODE_FREE)
-        continue;
-      std::cout << "+V" << j + 1 << "*" << (node.position - node2.position).norm();
+      float cMomentSum = 0.0f;
+      for (size_t k = 0; k < context.GetNodeCount(); k++) {
+        cMomentSum -= context.Nodes.at(k).cMoment;
+        cMomentSum -= (indNode(i)->position.x() - context.Nodes.at(k).position.x()) * context.Nodes.at(k).cForce.y();
+      }
+      concVector(i) = cMomentSum;
     }
-    std::cout << '=';
-    // sum of all Concentrated*Distance
-    for (size_t j = 0; j < context.GetNodeCount(); j++) {
-      const Node &node2 = context.Nodes.at(j);
-      if (node2.cForce.y() > LOW_CUTOFF)
-        std::cout << '-' << node2.cForce.y() << '*' << (node.position - node2.position).norm();
-      /*if(node.cMoment > LOW_CUTOFF)
-        std::cout << '+' << node2.cMoment;*/
-    }
-    std::cout << '\n';
   }
+  indVector = distMatrix.fullPivLu().solve(concVector);
+  for (size_t i = 0; i < indCnt; i++) {
+    indNode(i)->rForce.y() = indVector(i);
+  }
+  std::cout << distMatrix << "\n"
+            << indVector << '\n';
 }
 
 template <typename T>
@@ -115,13 +106,4 @@ bool CheckContextAlignY(const ReziContext &context) {
       return false;
   }
   return true;
-}
-
-size_t GetContextMomentMatrixCount(const ReziContext &context) {
-  size_t eq_cnt = 0;
-  for (const Node &node : context.Nodes) {
-    if (node.type != NODE_FREE)
-      eq_cnt++;
-  }
-  return eq_cnt;
 }
