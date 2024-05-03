@@ -69,18 +69,21 @@ void Editor::Awake(void) {
       .rotation = 180.0f,
       .zoom = 100.0f};
 
+  saveButton.active = true;
   saveButton.font = &font;
   saveButton.label = "Save";
   saveButton.size = {50.0f, 20.0f};
   saveButton.position = {0.0f, 0.0f};
   saveButton.CalculateTextPadding();
 
+  loadButton.active = true;
   loadButton.font = &font;
   loadButton.label = "Load";
   loadButton.size = {50.0f, 20.0f};
   loadButton.position = {saveButton.size.x(), 0.0f};
   loadButton.CalculateTextPadding();
 
+  lockYButton.active = true;
   lockYButton.font = &font;
   lockYButton.label = "Lock Y";
   lockYButton.size = {60.0f, 20.0f};
@@ -95,21 +98,22 @@ void Editor::Awake(void) {
   errMsg.clear();
 }
 
-void Editor::Update(void) {
-  auto getSelectedNodes = [=]() {
-    std::vector<size_t> vec;
-    for (size_t i = 0; i < SelectedNodes.size(); i++)
-      if (SelectedNodes.at(i))
-        vec.push_back(i);
-    return vec;
-  };
+std::vector<size_t> Editor::GetSelectedNodeIndexes(void) {
+  std::vector<size_t> vec;
+  for (size_t i = 0; i < selectedNodes.size(); i++)
+    if (selectedNodes.at(i))
+      vec.push_back(i);
+  return vec;
+}
 
+void Editor::Update(void) {
+  std::vector<size_t> selNodes = GetSelectedNodeIndexes();
   guiHeight = 100.0f;
 
   if (IsKeyPressed(KEY_N))
     editorMode = EditorMode::MODE_ADD;
   if (IsKeyPressed(KEY_ESCAPE)) {
-    SelectedNodes.assign(SelectedNodes.size(), false);
+    selectedNodes.assign(selectedNodes.size(), false);
     editorMode = EditorMode::MODE_FREE;
   }
 
@@ -134,40 +138,38 @@ void Editor::Update(void) {
       int hoveredIndex = GetHoveredNode(nodeRadius);
       if (IsKeyDown(KEY_LEFT_SHIFT)) {
         if (hoveredIndex != -1) {
-          if (SelectedNodes.at(hoveredIndex))
-            SelectedNodes.at(hoveredIndex) = false;
+          if (selectedNodes.at(hoveredIndex))
+            selectedNodes.at(hoveredIndex) = false;
           else
-            SelectedNodes.at(hoveredIndex) = true;
+            selectedNodes.at(hoveredIndex) = true;
         }
-      } else if (hoveredIndex == -1) {
-        SelectedNodes.assign(SelectedNodes.size(), false);
+      } else if (selNodes.size() == 0 && hoveredIndex != -1) {
+        if (!selectedNodes.at(hoveredIndex))
+          selectedNodes.at(hoveredIndex) = true;
+      } else {
+        selectedNodes.assign(selectedNodes.size(), false);
       }
     }
-    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-      ClickedNode = GetHoveredNode(nodeRadius * 1.5f);
-    } else {
-      ClickedNode = -1;
-    }
   }
-  std::vector<size_t> selNodes = getSelectedNodes();
   if (selNodes.size() == 2) {
     if (IsKeyPressed(KEY_C)) {
       context.Connect(selNodes.at(0), selNodes.at(1));
-      SelectedNodes.assign(SelectedNodes.size(), false);
+      selectedNodes.assign(selectedNodes.size(), false);
     }
     if (IsKeyPressed(KEY_D)) {
       context.Disconnect(selNodes.at(0), selNodes.at(1));
-      SelectedNodes.assign(SelectedNodes.size(), false);
+      selectedNodes.assign(selectedNodes.size(), false);
     }
   }
   if (selNodes.size()) {
     if (IsKeyPressed(KEY_DELETE)) {
+      size_t offset = 0;
       for (size_t i : selNodes)
-        context.DeleteNode(i);
-      SelectedNodes.assign(SelectedNodes.size(), false);
+        context.DeleteNode(i - offset++);
+      selectedNodes.assign(selectedNodes.size(), false);
     }
   }
-  if (IsKeyPressed(KEY_S)) {
+  if (IsKeyPressed(KEY_T)) {
     errMsg.clear();
     ReziSolver::SolveT(context, errMsg);
     if (errMsg.empty())
@@ -188,8 +190,8 @@ void Editor::UpdateGuiComponents(void) {
   if (loadButton.IsClicked(MOUSE_BUTTON_LEFT)) {
     errMsg.clear();
     context.LoadToml("out.toml", errMsg);
-    SelectedNodes.clear();
-    SelectedNodes.assign(context.GetNodeCount(), false);
+    selectedNodes.clear();
+    selectedNodes.assign(context.GetNodeCount(), false);
     statusMsg = "Loaded out.toml.";
   }
 }
@@ -210,8 +212,8 @@ void Editor::Render(void) {
       DrawCircleV(node.position, nodeRadius / camera.zoom, GREEN);
   }
   for (size_t i = 0; i < context.GetNodeCount(); i++) {
-    if (SelectedNodes.at(i))
-      DrawCircleV(context.Nodes.at(i).position, nodeRadius / camera.zoom, IsNodeHovered(i, nodeRadius) ? YELLOW : ORANGE);
+    if (selectedNodes.at(i))
+      DrawCircleV(context.Nodes.at(i).position, nodeRadius / camera.zoom, IsNodeHovered(i, nodeRadius) ? GREEN : LIME);
   }
   EndMode2D();
   RenderDebugInfo();

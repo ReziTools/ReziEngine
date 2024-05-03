@@ -14,6 +14,16 @@ enum EditorMode {
   MODE_DISCONNECT
 };
 
+const std::string EditorControls =
+    "escape: togle free mode\n"
+    "n: toggle node add mode\n"
+    "shift + left click: select a node\n"
+    "c: connect selected nodes\n"
+    "d: disconnect selected nodes\n"
+    "delete: delete selected nodes\n"
+    "t: solve system using Tsolver\n"
+    "s: sort system\n";
+
 class Editor {
 public:
   static Editor &GetInstance(int width, int height, int fullscreen, std::string title, ReziContext &context);
@@ -28,8 +38,8 @@ public:
   void RenderGUI(void);
   void RenderTopBar(void);
   void RenderNodeProps(void);
-  void RenderNodeGroupProps(void);
   void RenderDebugInfo(void);
+  std::vector<size_t> GetSelectedNodeIndexes(void);
   bool IsNodeHovered(size_t index, float radius);
   int GetHoveredNode(float radius);
   ~Editor(void);
@@ -44,9 +54,8 @@ private:
   float guiHeight;
   Camera2D camera;
   EditorMode editorMode;
-  std::vector<bool> SelectedNodes;
+  std::vector<bool> selectedNodes;
   int ClickedNode;
-  void UpdateSelectedNodes(void);
   Button saveButton, loadButton, lockYButton;
   int width, height;
   bool fullscreen;

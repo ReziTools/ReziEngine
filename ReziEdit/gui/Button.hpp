@@ -8,6 +8,7 @@ struct Button {
   bool IsHovered(void) const;
   bool IsClicked(int button) const;
   void CalculateTextPadding(void);
+  bool active = false;
   Vec2D position;
   Vec2D textPadding = {0.0f, 0.0f};
   Vec2D size;
