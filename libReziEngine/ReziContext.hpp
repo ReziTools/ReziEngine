@@ -31,6 +31,9 @@ struct ReziContext {
   void Resize(size_t size);
   void AddNode(Node node);
   void DeleteNode(size_t index);
+  void Connect(size_t index1, size_t index2);
+  void Disconnect(size_t index1, size_t index2);
+  void SortX(void);
   void Clear(void);
   void SaveToml(const std::string path, std::string &err) const;
   void LoadToml(const std::string path, std::string &err);

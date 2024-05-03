@@ -12,6 +12,7 @@ void EditorLoop(void) {
 
 int main(int argc, char **argv) {
   int width = 1200, height = 900, fullscreen = 0;
+#ifndef PLATFORM_WEB
   for (int i = 1; i < argc; ++i) {
     if (!strcmp(argv[i], "-f")) {
       fullscreen = 1;
@@ -23,6 +24,7 @@ int main(int argc, char **argv) {
       ++i;
     }
   }
+#endif
   ReziContext mainContext;
   Editor &editor = Editor::GetInstance(width, height, fullscreen, "ReziEdit " VERSION_STRING, mainContext);
   editor.Start();

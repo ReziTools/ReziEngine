@@ -7,10 +7,11 @@
 #include <rlgl.h>
 
 enum EditorMode {
-  MODE_PAN = 0,
-  MODE_ADDNODE,
-  MODE_ADDLINE,
-  MODE_DELLINE
+  MODE_FREE = 0,
+  MODE_ADD,
+  MODE_PROPS,
+  MODE_CONNECT,
+  MODE_DISCONNECT
 };
 
 class Editor {
@@ -22,9 +23,12 @@ public:
   void Start(void);
   void Loop(void);
   void Update(void);
+  void UpdateGuiComponents(void);
   void Render(void);
   void RenderGUI(void);
+  void RenderTopBar(void);
   void RenderNodeProps(void);
+  void RenderNodeGroupProps(void);
   void RenderDebugInfo(void);
   bool IsNodeHovered(size_t index, float radius);
   int GetHoveredNode(float radius);
@@ -34,14 +38,16 @@ private:
   static Editor *instance;
   Editor(int width, int height, bool fullscreen, std::string title, ReziContext &context);
   Font font;
-  float nodeRadius, detailLineThick, connLineThick, forceLineThick, momentLineThick;
-  std::string err_msg, status_msg;
+  bool lockY;
+  float nodeRadius;
+  std::string errMsg, statusMsg;
   float guiHeight;
   Camera2D camera;
-  TextBox<float> coordsBoxX, coordsBoxY, forceBoxX, forceBoxY, momentBox;
   EditorMode editorMode;
-  int selectionNodesIndex[2];
-  Button addNodeButton, nodeTypeButton, deleteNodeButton, addLineButton, deleteLineButton;
+  std::vector<bool> SelectedNodes;
+  int ClickedNode;
+  void UpdateSelectedNodes(void);
+  Button saveButton, loadButton, lockYButton;
   int width, height;
   bool fullscreen;
   std::string title;

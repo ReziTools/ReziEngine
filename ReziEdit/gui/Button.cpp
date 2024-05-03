@@ -1,22 +1,26 @@
 #include "Button.hpp"
 
-void Button::Render(void) {
+void Button::Render(void) const {
   if (IsHovered() && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
     DrawRectangleV(position, size, clickColor);
   else if (IsHovered())
     DrawRectangleV(position, size, hoverColor);
   else
     DrawRectangleV(position, size, normalColor);
-  DrawText(label.c_str(), position.x(), position.y(), 16, BLACK);
+  DrawTextEx(*font, label.c_str(), {position.x() + textPadding.x(), position.y() + textPadding.y()}, fontSize, fontSpacing, textColor);
 }
 
-bool Button::IsHovered(void) {
+void Button::CalculateTextPadding(void) {
+  textPadding = (size - (Vec2D)MeasureTextEx(*font, label.c_str(), fontSize, fontSpacing)) / 2.0f;
+}
+
+bool Button::IsHovered(void) const {
   return (GetMouseX() >= position.x() && GetMouseX() <= (position + size).x() &&
           GetMouseY() >= position.y() && GetMouseY() <= (position + size).y())
              ? true
              : false;
 }
 
-bool Button::IsClicked(int button) {
+bool Button::IsClicked(int button) const {
   return IsHovered() && IsMouseButtonPressed(button);
 }

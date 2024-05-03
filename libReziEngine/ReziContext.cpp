@@ -28,11 +28,31 @@ void ReziContext::Resize(size_t size) {
     row.resize(size);
 }
 
+void ReziContext::SortX(void) {
+  std::sort(Nodes.begin(), Nodes.end(), [](Node a, Node b) {
+    return a.position.x() > b.position.x();
+  });
+}
+
 void ReziContext::AddNode(Node node) {
   Nodes.push_back(node);
   Connections.resize(GetNodeCount());
   for (std::vector<size_t> &row : Connections)
     row.resize(GetNodeCount());
+}
+
+void ReziContext::Connect(size_t index1, size_t index2) {
+  if (index1 == index2)
+    return;
+  Connections.at(index1).at(index2) = 1;
+  Connections.at(index2).at(index1) = 1;
+}
+
+void ReziContext::Disconnect(size_t index1, size_t index2) {
+  if (index1 == index2)
+    return;
+  Connections.at(index1).at(index2) = 0;
+  Connections.at(index2).at(index1) = 0;
 }
 
 void ReziContext::DeleteNode(size_t index) {
