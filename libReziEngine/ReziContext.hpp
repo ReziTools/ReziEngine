@@ -7,6 +7,7 @@
 
 enum NodeType {
   NODE_INVALID = 0,
+  NODE_VIRTUAL,
   NODE_FREE,
   NODE_JOINT,
   NODE_ARTICULATION,
@@ -35,6 +36,8 @@ struct ReziContext {
   void Disconnect(size_t index1, size_t index2);
   void SortX(void);
   void Clear(void);
+  float GetMinFy(void) const;
+  float GetMaxFy(void) const;
   void SaveToml(const std::string path, std::string &err) const;
   void LoadToml(const std::string path, std::string &err);
 };

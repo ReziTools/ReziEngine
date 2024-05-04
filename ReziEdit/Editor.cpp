@@ -41,8 +41,7 @@ void Editor::Start(void) {
   Awake();
   if (fullscreen)
     ToggleFullscreen();
-#if defined(PLATFORM_WEB)
-#else
+#ifndef PLATFORM_WEB
   while (!WindowShouldClose()) {
     Loop();
   }
@@ -52,6 +51,7 @@ void Editor::Start(void) {
 void Editor::Loop(void) {
   Update();
   BeginDrawing();
+  rlDisableBackfaceCulling();
   ClearBackground(BLACK);
   Render();
   RenderTopBar();
@@ -82,7 +82,18 @@ void Editor::Awake(void) {
   lockYButton.font = &font;
   lockYButton.label = "Lock Y";
   lockYButton.size = {60.0f, 20.0f};
+#ifdef PLATFORM_WEB
+  lockYButton.position = {0.0f, 0.0f};
+#else
   lockYButton.position = {loadButton.size.x() + loadButton.position.x(), 0.0f};
+#endif
+  lockYButton.CalculateTextPadding();
+
+  helpButton.font = &font;
+  helpButton.label = "Help";
+  helpButton.size = {50.0f, 20.0f};
+  helpButton.position = {lockYButton.size.x() + lockYButton.position.x(), 0.0f};
+  helpButton.CalculateTextPadding();
 
   nodeTypeButton.font = &font;
   nodeTypeButton.size = {100.0f, 18.0f};
@@ -127,12 +138,9 @@ void Editor::Awake(void) {
   momentBox.fontSize = 16.0f;
   momentBox.size = {100.0f, 18.0f};
 
-  lockYButton.CalculateTextPadding();
-
-#ifdef PLATFORM_WEB
-  lockYButton.position = {0.0f, 0.0f};
-#endif
   nodeRadius = 6.0f;
+  forceViewScale = 0.5f;
+  momentViewScale = 0.1f;
 
   lockY = false;
   editorMode = MODE_FREE;
@@ -162,6 +170,7 @@ void Editor::Update(void) {
 
   if (IsKeyPressed(KEY_T)) {
     errMsg.clear();
+    solved = false;
     ReziSolver::SolveT(context, errMsg);
     if (errMsg.empty()) {
       statusMsg = "Solved system using T solver.";
@@ -169,6 +178,10 @@ void Editor::Update(void) {
     } else {
       solved = false;
     }
+  }
+
+  if (IsKeyPressed(KEY_S) && solver == 't') {
+    context.SortX();
   }
 
   if (lockYButton.IsClicked(MOUSE_BUTTON_LEFT)) {
@@ -181,6 +194,13 @@ void Editor::Update(void) {
     }
   }
 
+  if (helpButton.IsClicked(MOUSE_BUTTON_LEFT)) {
+    if (editorMode != MODE_INFO)
+      editorMode = MODE_INFO;
+    else
+      editorMode = MODE_FREE;
+  }
+
   if (loadButton.IsClicked(MOUSE_BUTTON_LEFT)) {
     errMsg.clear();
     context.LoadToml("out.toml", errMsg);
@@ -189,7 +209,7 @@ void Editor::Update(void) {
     statusMsg = "Loaded out.toml.";
   }
 
-  if (GetMouseY() > guiHeight) {
+  if (GetMouseY() > guiHeight && editorMode != MODE_INFO) {
     if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
       Vec2D delta = (Vec2D)GetMouseDelta();
       delta *= -1.0f / camera.zoom;
@@ -249,6 +269,7 @@ void Editor::Update(void) {
       forceBoxX.Update();
       forceBoxY.Update();
       momentBox.Update();
+      solved = false;
       if (nodeTypeButton.IsClicked(MOUSE_BUTTON_LEFT)) {
         switch (node.type) {
         case NODE_INVALID:
@@ -266,9 +287,12 @@ void Editor::Update(void) {
         case NODE_BEARING:
           node.type = NODE_FREE;
           break;
+        case NODE_VIRTUAL:
+          break;
         }
       }
-    } else if (selNodes.size()) {
+    }
+    if (selNodes.size()) {
       if (IsKeyPressed(KEY_DELETE)) {
         size_t offset = 0;
         for (size_t i : selNodes)
@@ -288,6 +312,10 @@ void Editor::Update(void) {
       selectedNodes.assign(context.GetNodeCount(), false);
     }
     break;
+  case MODE_INFO:
+    if (GetMouseY() > guiHeight && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+      editorMode = MODE_FREE;
+    break;
   }
 }
 
@@ -295,17 +323,21 @@ void Editor::Render(void) {
   ClearBackground(WHITE);
   BeginMode2D(camera);
   RenderGrid(1.0f);
+  if (solved && solver == 't') {
+    RenderDiagramT(context, -5.0f, 1.0f);
+    // RenderDiagramM(context, -10.0f, 1.0f);
+  }
   for (size_t i = 0; i < context.GetNodeCount(); i++) {
     Node &node = context.Nodes.at(i);
     for (size_t j = i + 1; j < context.GetNodeCount(); j++)
       if (context.Connections.at(i).at(j))
         DrawLineEx(context.Nodes.at(i).position, context.Nodes.at(j).position, 3.0f / camera.zoom, BLACK);
     DrawNode(node, camera.zoom / 1.5f, nodeRadius / 2.0f, BLACK);
-    DrawVector(node.cForce, node.position, 0.5f, 2.0f / camera.zoom, BLUE);
-    DrawMoment(node.cMoment, node.position, 0.1f, 2.0f / camera.zoom, BLUE);
-    if (solved) {
-      DrawVector(node.rForce, node.position, 0.5f, 2.0f / camera.zoom, PURPLE);
-      DrawMoment(node.rMoment, node.position, 0.1f, 2.0f / camera.zoom, PURPLE);
+    DrawVector(node.cForce, node.position, forceViewScale, 2.0f / camera.zoom, BLUE);
+    DrawMoment(node.cMoment, node.position, momentViewScale, 2.0f / camera.zoom, BLUE);
+    if (solved && solver == 't') {
+      DrawVector(node.rForce, node.position, forceViewScale, 2.0f / camera.zoom, PURPLE);
+      DrawMoment(node.rMoment, node.position, momentViewScale, 2.0f / camera.zoom, PURPLE);
     }
     DrawCircleV(node.position, nodeRadius / camera.zoom, IsNodeHovered(i, nodeRadius) ? GRAY : (node.type == NodeType::NODE_INVALID) ? RED
                                                                                                                                      : BLACK);
@@ -323,7 +355,26 @@ void Editor::Render(void) {
     Node &node = context.Nodes.at(i);
     DrawTextEx(font, TextFormat("(%lu)", i + 1), (Vector2){GetWorldToScreen2D(node.position, camera).x + 20.0f, GetWorldToScreen2D(node.position, camera).y + 30.0f}, 16.0f, 2.0f, BLACK);
   }
-  RenderDebugInfo();
+  if (solved) {
+    switch (solver) {
+    case 't':
+      for (size_t i = 0; i < context.GetNodeCount(); i++) {
+        Node &node = context.Nodes.at(i);
+        if (node.type == NODE_FREE || node.type == NODE_INVALID)
+          continue;
+        DrawTextEx(font, TextFormat("V%lu = %.4f", i + 1, node.rForce.y()), (Vector2){GetWorldToScreen2D(node.position, camera).x + 20.0f, GetWorldToScreen2D(node.position, camera).y + 70.0f}, 16.0f, 2.0f, PURPLE);
+      }
+      break;
+    default:
+      break;
+    }
+  }
+  for (Node &node : context.Nodes) {
+    if (node.cForce.y() != 0.0f)
+      DrawTextEx(font, TextFormat("%.4fF", node.cForce.y()), (Vector2){GetWorldToScreen2D(node.position, camera).x + 5.0f, GetWorldToScreen2D(node.position, camera).y - 40.0f}, 16.0f, 2.0f, BLUE);
+    if (node.cMoment != 0.0f)
+      DrawTextEx(font, TextFormat("%.4fFl", node.cMoment), (Vector2){GetWorldToScreen2D(node.position, camera).x + 5.0f, GetWorldToScreen2D(node.position, camera).y - 60.0f}, 16.0f, 2.0f, BLUE);
+  }
 }
 
 bool Editor::IsNodeHovered(size_t index, float radius) {
@@ -353,16 +404,22 @@ void Editor::RenderGUI(void) {
     connectButton.Render();
     disconnectButton.Render();
   }
+  if (editorMode == MODE_INFO) {
+    DrawRectangleV({0.0f, guiHeight}, {(float)GetScreenWidth(), (float)GetScreenHeight()}, {0, 0, 0, 64});
+    DrawTextEx(font, EditorControls.c_str(), {5.0f, guiHeight + 5.0f}, 16.0f, 2.0f, BLACK);
+  } else {
+    RenderDebugInfo();
+  }
 }
 
 void Editor::RenderTopBar(void) {
   DrawRectangleV({0.0f, 0.0f}, {(float)GetScreenWidth(), 20.0f}, GRAY);
-  DrawTextEx(font, "ReziEdit", {((float)GetScreenWidth() - MeasureTextEx(font, "ReziEdit", 16.0f, 2.0f).x - 2.0f), 2.0f}, 16.0f, 2.0f, BLACK);
 #ifndef PLATFORM_WEB
   saveButton.Render();
   loadButton.Render();
 #endif
   lockYButton.Render();
+  helpButton.Render();
 }
 
 void Editor::RenderNodeProps(void) {

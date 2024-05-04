@@ -1,23 +1,34 @@
 #include "ReziSolver.hpp"
 #include <Eigen/Dense>
-#include <iostream>
 
 void ReziSolver::SolveT(ReziContext &context, std::string &err) {
   err.clear();
+
   for (Node &node : context.Nodes) {
     if (node.type == NODE_JOINT) {
       err = "Joints are not allowed for T solver.";
       return;
     }
     if (node.type == NODE_INVALID) {
-      err = "Context contains invalid nodes.";
+      err = "System contains invalid nodes.";
       return;
     }
   }
-  if (context.GetNodeCount() <= 1) {
-    err = "Context has insufficient nodes.";
+
+  size_t indCnt = 0;
+  for (const Node &node : context.Nodes) {
+    if (node.type != NODE_FREE)
+      indCnt++;
+  }
+  if (indCnt < 2) {
+    err = "Not enough external joints.";
     return;
   }
+  if (indCnt > 2) {
+    err = "System has too many external joints, Mohr-Maxwell is not fully implemented.";
+    return;
+  }
+
   if (!CheckContextDFS(context)) {
     err = "Graph is not connected.";
     return;
@@ -26,15 +37,7 @@ void ReziSolver::SolveT(ReziContext &context, std::string &err) {
     err = "Nodes are unaligned on Y axis.";
     return;
   }
-  size_t indCnt = 0;
-  for (const Node &node : context.Nodes) {
-    if (node.type != NODE_FREE)
-      indCnt++;
-  }
-  if (!indCnt) {
-    err = "Moment equations cannot be generated.";
-    return;
-  }
+
   Eigen::MatrixXf distMatrix(indCnt, indCnt);
   Eigen::VectorXf indVector(indCnt);
   Eigen::VectorXf concVector(indCnt);
@@ -54,15 +57,14 @@ void ReziSolver::SolveT(ReziContext &context, std::string &err) {
       if (i == j)
         distMatrix(i, j) = 0.0f;
       else
-        distMatrix(i, j) = indNode(i)->position.x() - indNode(j)->position.x();
-
-      float cMomentSum = 0.0f;
-      for (size_t k = 0; k < context.GetNodeCount(); k++) {
-        cMomentSum -= context.Nodes.at(k).cMoment;
-        cMomentSum -= (indNode(i)->position.x() - context.Nodes.at(k).position.x()) * context.Nodes.at(k).cForce.y();
-      }
-      concVector(i) = cMomentSum;
+        distMatrix(i, j) = -(indNode(i)->position.x() - indNode(j)->position.x());
     }
+    float cMomentSum = 0.0f;
+    for (size_t k = 0; k < context.GetNodeCount(); k++) {
+      cMomentSum -= context.Nodes.at(k).cMoment;
+      cMomentSum += (indNode(i)->position.x() - context.Nodes.at(k).position.x()) * context.Nodes.at(k).cForce.y();
+    }
+    concVector(i) = cMomentSum;
   }
   indVector = distMatrix.fullPivLu().solve(concVector);
   for (Node &node : context.Nodes) {

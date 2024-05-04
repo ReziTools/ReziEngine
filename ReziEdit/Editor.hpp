@@ -8,10 +8,13 @@
 
 enum EditorMode {
   MODE_FREE = 0,
-  MODE_ADD
+  MODE_ADD,
+  MODE_INFO
 };
 
 const std::string EditorControls =
+    "Editor controls:\n"
+    "=================================\n"
     "escape: togle free mode\n"
     "n: toggle node add mode\n"
     "shift + left click: select a node\n"
@@ -53,7 +56,8 @@ private:
   char solver;
   bool solved;
   std::vector<bool> selectedNodes;
-  Button addNodeButton, connectButton, disconnectButton, saveButton, loadButton, lockYButton, nodeTypeButton;
+  float forceViewScale, momentViewScale;
+  Button addNodeButton, connectButton, disconnectButton, saveButton, loadButton, lockYButton, nodeTypeButton, helpButton;
   TextBox<float> coordsBoxX, coordsBoxY, forceBoxX, forceBoxY, momentBox;
   int width, height;
   bool fullscreen;

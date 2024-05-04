@@ -1,7 +1,7 @@
 
 ### Engine
 - [x] Graf conexiuni
-- [ ] Solver necunoscute
+- [x] Solver necunoscute
 
 ### Editor
 - [x] Elemente GUI
@@ -12,15 +12,15 @@
 - [ ] Hasuri incastrari/reazeme
 
 ### Grafice
-- [ ] Diagrama T
+- [x] Diagrama T
 - [ ] Diagrama M
 - [ ] Diagrama N
 
 ### File format
 - [x] Writing
-- [ ] Parsing
+- [x] Parsing
 
 ### Altele
 - [x] Separare cod in ReziEditor, ReziContext, ReziSolver
-- [ ] Interfata CLI
-- [ ] Suport emscripten
+- [x] Interfata CLI
+- [x] Suport emscripten

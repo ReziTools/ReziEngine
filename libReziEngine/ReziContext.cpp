@@ -12,9 +12,12 @@ std::string getNodeTypeName(NodeType type) {
     return "bearing";
   case NodeType::NODE_FREE:
     return "free";
+  case NodeType::NODE_VIRTUAL:
+    return "virtual";
   case NodeType::NODE_INVALID:
     return "invalid";
   }
+  return "error";
 }
 
 size_t ReziContext::GetNodeCount(void) const { return Nodes.size(); }
@@ -107,6 +110,8 @@ NodeType stringToNodeType(std::string str) {
     return NodeType::NODE_ARTICULATION;
   if (str == "joint")
     return NodeType::NODE_JOINT;
+  if (str == "virtual")
+    return NodeType::NODE_VIRTUAL;
   return NodeType::NODE_INVALID;
 }
 
@@ -136,4 +141,22 @@ void ReziContext::LoadToml(const std::string path, std::string &err) {
       Connections.at(index - 1).at(connIndex.as_integer() - 1) = 1;
     }
   }
+}
+
+float ReziContext::GetMinFy(void) const {
+  float min = Nodes.at(0).cForce.y();
+  for (const Node &node : Nodes) {
+    min = std::min(min, node.cForce.y());
+    min = std::min(min, node.rForce.y());
+  }
+  return min;
+}
+
+float ReziContext::GetMaxFy(void) const {
+  float max = Nodes.at(0).cForce.y();
+  for (const Node &node : Nodes) {
+    max = std::max(max, node.cForce.y());
+    max = std::max(max, node.rForce.y());
+  }
+  return max;
 }
