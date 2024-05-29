@@ -1,4 +1,7 @@
 # ReziEngine
+
+# This project is discontinued and will be replaced by ReziSim.
+
 ## Abordari numerice pentru ridicarea nedeterminarilor pentru diverse tipuri de solicitari
 ## Numerical approaches for resolving indeterminacies for various types of mechanical loads
 
