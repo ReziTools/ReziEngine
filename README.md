@@ -1,13 +1,13 @@
 # ReziEngine
 
-# This project is discontinued and will be replaced by ReziSim.
+# This project is discontinued and will be replaced by [ReziSim](https://github.com/ReziTools/ReziSim).
 
 ## Abordari numerice pentru ridicarea nedeterminarilor pentru diverse tipuri de solicitari
 ## Numerical approaches for resolving indeterminacies for various types of mechanical loads
 
-Try the latest web version [here](https://reziengine.github.io/latest/ReziEdit.html).
+Try the final web version [here](https://rezitools.github.io/ReziSim_legacy/latest/ReziEdit.html).
 
-See all the previous web releases [here](https://reziengine.github.io).
+See all the previous web releases [here](https://rezitools.github.io/ReziSim_legacy/).
 
 # Features
 - GUI interface for editing mechanical load systems
